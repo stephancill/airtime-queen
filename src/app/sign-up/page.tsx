@@ -103,7 +103,7 @@ export default function SignUpPage() {
   }, [challenge, createAccountMutation, phoneNumber]);
 
   const isPhoneValid = useMemo(() => {
-    const phoneRegex = /^\+\d{1,2}\d{9}$/;
+    const phoneRegex = /^\+27\d{9}$/;
     return phoneRegex.test(phoneNumber);
   }, [phoneNumber]);
 
@@ -111,7 +111,7 @@ export default function SignUpPage() {
     const value = e.target.value;
     setPhoneNumber(value);
     if (value && !isPhoneValid) {
-      setPhoneError("Phone number must start with + followed by 10-11 digits");
+      setPhoneError("Phone number must start with +27 followed by 9 digits");
     } else {
       setPhoneError("");
     }

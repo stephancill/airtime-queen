@@ -12,6 +12,17 @@ import { lucia } from "@/lib/auth";
 export async function POST(req: NextRequest) {
   const { phoneNumber, passkeyId, passkeyPublicKey, nonce } = await req.json();
 
+  // Validate the phone number
+  const phoneRegex = /^\+27\d{9}$/;
+  if (!phoneRegex.test(phoneNumber)) {
+    return Response.json(
+      {
+        error: "Invalid phone number. Must start with +27 followed by 9 digits",
+      },
+      { status: 400 }
+    );
+  }
+
   // Validate the challenge
   const challenge = (await redis.get(`challenge:${nonce}`)) as Hex | null;
 

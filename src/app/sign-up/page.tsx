@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Hex, hexToBytes } from "viem";
 import { createCredential } from "webauthn-p256";
@@ -10,6 +10,8 @@ import Link from "next/link";
 import { Button } from "../../components/Button";
 import { createUUID } from "../../lib/utils";
 import { useSession } from "../../providers/SessionProvider";
+
+const phoneRegex = /^\+27\d{9}$/;
 
 export default function SignUpPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -103,14 +105,13 @@ export default function SignUpPage() {
   }, [challenge, createAccountMutation, phoneNumber]);
 
   const isPhoneValid = useMemo(() => {
-    const phoneRegex = /^\+27\d{9}$/;
     return phoneRegex.test(phoneNumber);
   }, [phoneNumber]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPhoneNumber(value);
-    if (value && !isPhoneValid) {
+    if (value && !phoneRegex.test(value)) {
       setPhoneError("Phone number must start with +27 followed by 9 digits");
     } else {
       setPhoneError("");
@@ -135,10 +136,14 @@ export default function SignUpPage() {
             onChange={handlePhoneChange}
             placeholder="+27"
             className={`border ${
-              phoneError ? "border-red-500" : "border-gray-300"
+              !isPhoneValid && phoneNumber
+                ? "border-red-500"
+                : "border-gray-300"
             } rounded-md p-4 text-lg`}
           />
-          {phoneError && <p className="text-red-500 text-sm">{phoneError}</p>}
+          {!isPhoneValid && (
+            <p className="text-red-500 text-sm">{phoneError}</p>
+          )}
         </div>
         <div className="flex flex-col gap-2 items-center">
           <Button

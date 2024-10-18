@@ -114,7 +114,7 @@ export default function LoginPage() {
     <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-65px)] gap-8">
       <div className="text-3xl font-bold">Airtime Wallet</div>
 
-      <div className="flex flex-col gap-4 mt-[30px]">
+      <div className="flex flex-col gap-4 mt-[30px] w-full px-2 md:px-10">
         <Button onClick={() => signInWithPasskey()}>
           <div className="text-xl">
             {signInMutation.isPending
@@ -127,7 +127,7 @@ export default function LoginPage() {
             pathname: "/sign-up",
             query: { redirect: searchParams.get("redirect") },
           }}
-          className="text-gray-500"
+          className="text-gray-500 text-center"
         >
           Don't have an account? Sign up
         </Link>

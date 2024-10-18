@@ -1,10 +1,10 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import React, { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Sheet } from "react-modal-sheet";
 import { Address, erc20Abi, formatUnits } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
-import { Button } from "./Button";
-import { Sheet } from "react-modal-sheet";
 import { useSession } from "../providers/SessionProvider";
+import { Button } from "./Button";
 
 type Product = {
   id: string;
@@ -50,7 +50,16 @@ type ProductsResponse = {
 const fetchProducts = async (): Promise<ProductsResponse> => {
   const response = await fetch("/api/merchant/products");
   if (!response.ok) {
-    throw new Error("Failed to fetch products");
+    let errorMessage = "Failed to fetch products";
+    try {
+      const json = await response.json();
+      if (json.error) {
+        errorMessage = json.error;
+      }
+    } catch (error) {
+      console.error("Failed to fetch products", error);
+    }
+    throw new Error(errorMessage);
   }
   return response.json();
 };
@@ -145,6 +154,7 @@ export function ShopView() {
   } = useQuery<ProductsResponse, Error>({
     queryKey: ["products"],
     queryFn: fetchProducts,
+    retry: false,
   });
 
   const quoteMutation = useMutation<

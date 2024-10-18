@@ -3,7 +3,7 @@ import { fallback, Hex, http } from "viem";
 import { SignReturnType, WebAuthnData } from "webauthn-p256";
 
 export function createProxyRequestHandler(
-  targetUrl: string,
+  targetUrl: string | ((req: NextRequest) => string),
   {
     searchParams = {},
     headers = {},
@@ -16,7 +16,9 @@ export function createProxyRequestHandler(
     req: NextRequest,
     context: { params?: { path: string[] } }
   ): Promise<NextResponse> {
-    const url = new URL(targetUrl);
+    const url = new URL(
+      typeof targetUrl === "function" ? targetUrl(req) : targetUrl
+    );
 
     url.pathname = [
       ...url.pathname.split("/").slice(1),

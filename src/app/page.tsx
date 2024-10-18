@@ -57,13 +57,13 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-65px)] gap-8">
         <div className="text-3xl font-bold">Airtime Wallet</div>
 
-        <div className="flex flex-col gap-4 mt-[30px]">
+        <div className="flex flex-col gap-4 mt-[30px] w-full px-2 md:px-10">
           <Link href="/sign-up" className="hover:no-underline">
             <Button>
               <div className="text-xl">Create account</div>
             </Button>
           </Link>
-          <Link href="/login" className="text-gray-500">
+          <Link href="/login" className="text-gray-500 text-center">
             Sign in to existing account
           </Link>
         </div>

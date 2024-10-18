@@ -19,5 +19,4 @@ export const POST = withAuth(async (req, user, context) => {
   })(req, context);
 });
 
-// TODO: make the target URL a transformation of the request URL
 export const GET = createProxyRequestHandler(process.env.MERCHANT_API_URL);

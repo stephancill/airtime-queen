@@ -8,13 +8,21 @@ import {
 } from "viem/account-abstraction";
 import { base } from "viem/chains";
 import { lucia } from "@/lib/auth";
+import { parsePhoneNumber } from "libphonenumber-js/min";
 
 export async function POST(req: NextRequest) {
-  const { phoneNumber, passkeyId, passkeyPublicKey, nonce } = await req.json();
+  const {
+    phoneNumber: phoneNumberRaw,
+    passkeyId,
+    passkeyPublicKey,
+    nonce,
+  } = await req.json();
 
   // Validate the phone number
-  const phoneRegex = /^\+27\d{9}$/;
-  if (!phoneRegex.test(phoneNumber)) {
+  const parsedPhoneNumber = parsePhoneNumber(phoneNumberRaw, {
+    defaultCountry: "ZA",
+  });
+  if (!parsedPhoneNumber.isValid()) {
     return Response.json(
       {
         error: "Invalid phone number. Must start with +27 followed by 9 digits",
@@ -33,7 +41,7 @@ export async function POST(req: NextRequest) {
   // Check if the phone number is already registered
   const existingUser = await db
     .selectFrom("users")
-    .where("phoneNumber", "=", phoneNumber)
+    .where("phoneNumber", "=", parsedPhoneNumber.number)
     .where("verifiedAt", "is not", null)
     .selectAll()
     .executeTakeFirst();
@@ -65,7 +73,7 @@ export async function POST(req: NextRequest) {
   const newUser = await db
     .insertInto("users")
     .values({
-      phoneNumber,
+      phoneNumber: parsedPhoneNumber.number,
       passkeyId,
       passkeyPublicKey,
       walletAddress: account.address,

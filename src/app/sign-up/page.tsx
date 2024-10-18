@@ -10,13 +10,19 @@ import Link from "next/link";
 import { Button } from "../../components/Button";
 import { createUUID } from "../../lib/utils";
 import { useSession } from "../../providers/SessionProvider";
+import PhoneInput, { parsePhoneNumber } from "react-phone-number-input";
+import { E164Number } from "libphonenumber-js/core";
 
-const phoneRegex = /^\+27\d{9}$/;
+import "react-phone-number-input/style.css";
 
 export default function SignUpPage() {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [phoneError, setPhoneError] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState<E164Number>();
   const [nonce] = useState(() => createUUID());
+
+  const parsedPhoneNumber = useMemo(() => {
+    if (!phoneNumber) return undefined;
+    return parsePhoneNumber(phoneNumber);
+  }, [phoneNumber]);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,30 +99,19 @@ export default function SignUpPage() {
   });
 
   const handleCreateAccount = useCallback(async () => {
-    if (!challenge) return;
+    if (!challenge || !parsedPhoneNumber?.isValid()) return;
 
     const credential = await createCredential({
       challenge: hexToBytes(challenge),
       user: {
-        name: phoneNumber,
+        name: parsedPhoneNumber.number,
       },
     });
-    createAccountMutation.mutate({ credential, phoneNumber });
+    createAccountMutation.mutate({
+      credential,
+      phoneNumber: parsedPhoneNumber.number,
+    });
   }, [challenge, createAccountMutation, phoneNumber]);
-
-  const isPhoneValid = useMemo(() => {
-    return phoneRegex.test(phoneNumber);
-  }, [phoneNumber]);
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPhoneNumber(value);
-    if (value && !phoneRegex.test(value)) {
-      setPhoneError("Phone number must start with +27 followed by 9 digits");
-    } else {
-      setPhoneError("");
-    }
-  };
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {(error as Error).message}</div>;
@@ -129,27 +124,21 @@ export default function SignUpPage() {
           <label className="text-lg" htmlFor="phoneNumber">
             Sign up with phone number
           </label>
-          <input
-            type="tel"
-            id="phoneNumber"
+          <PhoneInput
+            placeholder="Enter phone number"
             value={phoneNumber}
-            onChange={handlePhoneChange}
-            placeholder="+27"
-            className={`border ${
-              !isPhoneValid && phoneNumber
-                ? "border-red-500"
-                : "border-gray-300"
-            } rounded-md p-4 text-lg`}
+            onChange={setPhoneNumber}
+            defaultCountry="ZA"
+            className="border border-gray-300 rounded-md p-4 text-lg"
           />
-          {!isPhoneValid && (
-            <p className="text-red-500 text-sm">{phoneError}</p>
-          )}
         </div>
         <div className="flex flex-col gap-2 items-center">
           <Button
             onClick={handleCreateAccount}
             disabled={
-              createAccountMutation.isPending || !challenge || !isPhoneValid
+              createAccountMutation.isPending ||
+              !challenge ||
+              !parsedPhoneNumber?.isValid()
             }
           >
             {createAccountMutation.isPending

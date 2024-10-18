@@ -67,9 +67,9 @@ export default function VerifyPhonePage() {
   }, [verifyCodeMutation, verificationCode]);
 
   return (
-    <div className="flex flex-col min-h-[calc(100dvh-65px)]">
+    <div className="flex flex-col min-h-[calc(100dvh-65px)] px-2 md:px-10">
       <div className="text-3xl font-bold">Airtime Wallet</div>
-      <div className="flex flex-col gap-8 mt-[80px]">
+      <div className="flex flex-col gap-8 h-full my-auto">
         <h1 className="text-2xl font-semibold">Verify Phone Number</h1>
         <div className="flex flex-col gap-2">
           <label className="text-lg" htmlFor="phoneNumber">
@@ -84,55 +84,59 @@ export default function VerifyPhonePage() {
             className="border border-gray-300 rounded-md p-4 text-lg bg-gray-100"
           />
         </div>
-        {!isCodeSent && (
-          <Button
-            onClick={handleSendVerification}
-            disabled={sendVerificationMutation.isPending || !user?.phoneNumber}
-          >
-            {sendVerificationMutation.isPending
-              ? "Sending Code..."
-              : "Send Verification Code"}
-          </Button>
-        )}
-        {isCodeSent && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-lg" htmlFor="verificationCode">
-                Verification Code
-              </label>
-              <input
-                type="text"
-                id="verificationCode"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                placeholder="e.g. 123456"
-                className="border border-gray-300 rounded-md p-4 text-lg"
-              />
-            </div>
+        <div className="flex flex-col gap-2">
+          {!isCodeSent && (
             <Button
-              onClick={handleVerifyCode}
+              onClick={handleSendVerification}
               disabled={
-                verifyCodeMutation.isPending || verificationCode.length < 6
+                sendVerificationMutation.isPending || !user?.phoneNumber
               }
             >
-              {verifyCodeMutation.isPending ? "Verifying..." : "Verify Code"}
+              {sendVerificationMutation.isPending
+                ? "Sending Code..."
+                : "Send Verification Code"}
             </Button>
-          </div>
-        )}
-        {(sendVerificationMutation.isError || verifyCodeMutation.isError) && (
-          <div className="text-red-500">
-            Error:{" "}
-            {
-              (
-                (sendVerificationMutation.error ||
-                  verifyCodeMutation.error) as Error
-              ).message
-            }
-          </div>
-        )}
-        <Link href="/sign-up" className="text-gray-500">
-          Back to Sign Up
-        </Link>
+          )}
+          {isCodeSent && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-lg" htmlFor="verificationCode">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  id="verificationCode"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  placeholder="e.g. 123456"
+                  className="border border-gray-300 rounded-md p-4 text-lg"
+                />
+              </div>
+              <Button
+                onClick={handleVerifyCode}
+                disabled={
+                  verifyCodeMutation.isPending || verificationCode.length < 6
+                }
+              >
+                {verifyCodeMutation.isPending ? "Verifying..." : "Verify Code"}
+              </Button>
+            </div>
+          )}
+          {(sendVerificationMutation.isError || verifyCodeMutation.isError) && (
+            <div className="text-red-500">
+              Error:{" "}
+              {
+                (
+                  (sendVerificationMutation.error ||
+                    verifyCodeMutation.error) as Error
+                ).message
+              }
+            </div>
+          )}
+          <Link href="/sign-up" className="text-gray-500 text-center">
+            Back to Sign Up
+          </Link>
+        </div>
       </div>
     </div>
   );

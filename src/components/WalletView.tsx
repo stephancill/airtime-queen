@@ -20,6 +20,8 @@ import { Button } from "./Button";
 import { Sheet } from "react-modal-sheet";
 import { useMutation } from "@tanstack/react-query";
 import { mainnet } from "viem/chains";
+import { useAnimatedVirtualKeyboard } from "../hooks/keyboard";
+import { twMerge } from "tailwind-merge";
 
 const token = {
   name: "USDC",
@@ -45,6 +47,8 @@ export function WalletView() {
   const { writeContractAsync } = useWriteContract();
   const [transactionSuccess, setTransactionSuccess] = useState(false);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
+  const { keyboardHeight, isKeyboardOpen, keyboardHeightRaw } =
+    useAnimatedVirtualKeyboard();
 
   const {
     data: tokenBalance,
@@ -157,11 +161,17 @@ export function WalletView() {
         isOpen={isOpen}
         onClose={() => !sendMutation.isPending && setOpen(false)}
         className="max-w-[400px] mx-auto"
-        snapPoints={[0.7]}
+        detent="content-height"
+        snapPoints={[1]}
       >
         <Sheet.Container>
           <Sheet.Header />
-          <Sheet.Content className="p-4 mb-[100px]">
+          <Sheet.Content
+            className={twMerge(`${!isKeyboardOpen ? "p-4" : ""}`, "px-4")}
+            style={{
+              paddingBottom: keyboardHeight,
+            }}
+          >
             {!transactionSuccess ? (
               <div className="flex flex-col gap-6">
                 <div className="text-2xl">Send</div>

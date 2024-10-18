@@ -91,7 +91,7 @@ export default function Home() {
             <WalletView />
           </div>
           <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
-          <div>
+          <div className="pb-[100px]">
             <ShopView />
           </div>
         </div>

@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Hex } from "viem";
 import { sign, SignReturnType, WebAuthnData } from "webauthn-p256";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 /**
  * Lets the user sign in using a passkey and stores the user metadata in local storage.
@@ -107,7 +108,7 @@ export default function LoginPage() {
     signInMutation.mutate(credential);
   }, [challenge, signInMutation]);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingScreen />;
   if (error) return <div>Error: {(error as Error).message}</div>;
 
   return (
@@ -117,9 +118,7 @@ export default function LoginPage() {
       <div className="flex flex-col gap-4 mt-[30px] w-full px-2 md:px-10">
         <Button onClick={() => signInWithPasskey()}>
           <div className="text-xl">
-            {signInMutation.isPending
-              ? "Signing in..."
-              : "Sign in with passkey"}
+            {signInMutation.isPending ? "Signing in..." : "Sign in"}
           </div>
         </Button>
         <Link

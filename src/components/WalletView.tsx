@@ -15,18 +15,19 @@ import {
   useEnsAddress,
   createConfig,
 } from "wagmi";
-import { truncateAddress } from "../lib/utils";
+import { truncateAddress } from "@/lib/utils";
 import { Button } from "./Button";
 import { Sheet } from "react-modal-sheet";
 import { useMutation } from "@tanstack/react-query";
 import { mainnet } from "viem/chains";
-import { useAnimatedVirtualKeyboard } from "../hooks/keyboard";
+import { useAnimatedVirtualKeyboard } from "@/hooks/keyboard";
 import { twMerge } from "tailwind-merge";
 import {
   E164Number,
   parsePhoneNumber,
   PhoneNumber,
 } from "libphonenumber-js/min";
+import { LoadingScreen } from "./LoadingScreen";
 
 const token = {
   name: "USDC",
@@ -174,9 +175,7 @@ export function WalletView() {
           <div className="text-[60px] font-bold">
             ${parseFloat(formatUnits(tokenBalance, token.decimals)).toFixed(2)}
           </div>
-        ) : isLoadingBalances ? (
-          <div>Loading...</div>
-        ) : (
+        ) : isLoadingBalances ? null : (
           <div>Error: {errorBalances?.message}</div>
         )}
         <button

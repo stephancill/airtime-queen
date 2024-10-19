@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import path from "path";
 import pg from "pg";
 import Cursor from "pg-cursor";
-import { Tables } from "../types/db";
+import { Tables } from "@/types/db";
 import { NodePostgresAdapter } from "@lucia-auth/adapter-postgresql";
 
 const { Pool } = pg;
@@ -66,7 +66,7 @@ const createMigrator = async (db: Kysely<Tables>) => {
     provider: new FileMigrationProvider({
       fs,
       path,
-      migrationFolder: path.join(currentDir, "../", "migrations"),
+      migrationFolder: path.join(currentDir, "@/", "migrations"),
     }),
   });
 

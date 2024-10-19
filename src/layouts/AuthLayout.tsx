@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SessionProvider, useSession } from "../providers/SessionProvider";
+import { SessionProvider, useSession } from "@/providers/SessionProvider";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ function AuthLayoutContent({ children }: AuthLayoutProps) {
   }, [user, isLoading, isError, router]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   if (isError || !user) {

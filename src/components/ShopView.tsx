@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Sheet } from "react-modal-sheet";
 import { Address, erc20Abi, formatUnits } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
-import { useSession } from "../providers/SessionProvider";
+import { useSession } from "@/providers/SessionProvider";
 import { Button } from "./Button";
+import { LoadingScreen } from "./LoadingScreen";
 
 type Product = {
   id: string;
@@ -229,7 +230,7 @@ export function ShopView() {
     handleClearQuote();
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingScreen />;
   if (error) return <div>Error: {error.message}</div>;
 
   return (

@@ -6,7 +6,7 @@ import {
   toWebAuthnAccount,
 } from "viem/account-abstraction";
 import { useClient, useConnect } from "wagmi";
-import { smartWalletConnector } from "../lib/connector";
+import { smartWalletConnector } from "@/lib/connector";
 import { useSession } from "./SessionProvider";
 
 interface SmartWalletAccountType {
@@ -60,6 +60,7 @@ export function SmartWalletAccountProvider({
       return smartWallet;
     },
     enabled: !!user,
+    throwOnError: true,
   });
 
   return (

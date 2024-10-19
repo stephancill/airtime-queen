@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import Modal from "../components/Modal";
+import Modal from "@/components/Modal";
 
 export const metadata: Metadata = {
   title: "Airtime Wallet",

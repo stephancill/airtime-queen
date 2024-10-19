@@ -1,4 +1,4 @@
-import { ensureMigrations, getDbClient } from "../lib/db";
+import { ensureMigrations, getDbClient } from "@/lib/db";
 
 const db = getDbClient();
 

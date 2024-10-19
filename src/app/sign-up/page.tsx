@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/Button";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { CHALLENGE_DURATION_SECONDS } from "@/lib/constants";
 import { createUUID } from "@/lib/utils";
 import { useSession } from "@/providers/SessionProvider";
@@ -144,7 +145,7 @@ export default function SignUpPage() {
     [handleCreateAccount]
   );
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingScreen />;
   if (error) return <div>Error: {(error as Error).message}</div>;
 
   return (

@@ -1,56 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/Button";
+import { ShopView } from "@/components/ShopView";
+import { WalletView } from "@/components/WalletView";
+import { AuthLayout } from "@/layouts/AuthLayout";
+import { useSession } from "@/providers/SessionProvider";
+import { useSmartWalletAccount } from "@/providers/SmartWalletAccountProvider";
 import { Settings } from "lucide-react";
 import Link from "next/link";
-import {
-  toCoinbaseSmartAccount,
-  toWebAuthnAccount,
-} from "viem/account-abstraction";
-import { useAccount, useClient, useConnect } from "wagmi";
-import { Button } from "../components/Button";
-import { ShopView } from "../components/ShopView";
-import { WalletView } from "../components/WalletView";
-import { AuthLayout } from "../layouts/AuthLayout";
-import { smartWalletConnector } from "../lib/connector";
-import { useSession } from "../providers/SessionProvider";
 
 export default function Home() {
-  const { user, isLoading: isUserLoading, logout } = useSession();
-  const client = useClient();
-  const { connectAsync } = useConnect();
-  const account = useAccount();
-
-  const { isLoading: isWalletLoading } = useQuery({
-    queryKey: ["smartWallet", user?.passkeyId],
-    queryFn: async () => {
-      if (!user) return null;
-
-      const passkeyAccount = toWebAuthnAccount({
-        credential: {
-          id: user.passkeyId,
-          publicKey: user.passkeyPublicKey,
-        },
-      });
-
-      const smartWallet = await toCoinbaseSmartAccount({
-        client,
-        owners: [passkeyAccount],
-      });
-
-      const burnerConnector = smartWalletConnector({
-        account: smartWallet,
-      });
-
-      await connectAsync({
-        connector: burnerConnector,
-      });
-
-      return smartWallet;
-    },
-    enabled: !!user,
-    throwOnError: true,
-  });
+  const { user, isLoading: isUserLoading } = useSession();
+  useSmartWalletAccount();
 
   if (!isUserLoading && !user) {
     return (

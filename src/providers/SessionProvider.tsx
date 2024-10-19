@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, ReactNode, useContext, useEffect } from "react";
-import { UserRow } from "../types/db";
+import { UserRow } from "@/types/db";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { AUTH_SESSION_COOKIE_NAME } from "../lib/constants";
+import { AUTH_SESSION_COOKIE_NAME } from "@/lib/constants";
 
 async function fetchUser(): Promise<UserRow> {
   const response = await fetch("/api/user");

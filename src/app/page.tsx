@@ -1,18 +1,20 @@
 "use client";
 
 import { Button } from "@/components/Button";
+import { SavingsView } from "@/components/SavingsView";
 import { ShopView } from "@/components/ShopView";
 import { WalletView } from "@/components/WalletView";
 import { AuthLayout } from "@/layouts/AuthLayout";
+import { BASE_TOKEN, YIELD_TOKEN } from "@/lib/constants";
 import { useSession } from "@/providers/SessionProvider";
 import { useSmartWalletAccount } from "@/providers/SmartWalletAccountProvider";
 import { Settings } from "lucide-react";
 import Link from "next/link";
-import { SavingsView } from "../components/SavingsView";
-import { BASE_TOKEN, YIELD_TOKEN } from "../lib/constants";
+import { useState } from "react";
 
 export default function Home() {
   const { user, isLoading: isUserLoading } = useSession();
+  const [redactPhoneNumber, setRedactPhoneNumber] = useState(false);
   useSmartWalletAccount();
 
   if (!isUserLoading && !user) {
@@ -43,8 +45,15 @@ export default function Home() {
       <div className="flex flex-col">
         <div className="flex flex-col gap-8 mb-[100px]">
           <div className="flex px-4 items-center">
-            <div className="text-3xl font-bold flex-grow">
-              {user.phoneNumber}
+            <div
+              className="text-3xl font-bold flex-grow cursor-pointer"
+              onClick={() => setRedactPhoneNumber(!redactPhoneNumber)}
+            >
+              {redactPhoneNumber
+                ? user.phoneNumber.slice(0, 3) +
+                  "*****" +
+                  user.phoneNumber.slice(-4)
+                : user.phoneNumber}
             </div>
             <Link href="/settings" className="border-none text-black">
               <Settings size={28} />

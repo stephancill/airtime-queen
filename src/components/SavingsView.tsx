@@ -1,4 +1,5 @@
 import { aaveL2PoolAbi } from "@/abi/aaveL2Pool";
+import { BASE_TOKEN_AAVE_POOL } from "@/lib/constants";
 import { useSession } from "@/providers/SessionProvider";
 import { Token } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
@@ -13,9 +14,6 @@ import {
 } from "wagmi";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
-
-const usdcAavePoolAddress =
-  "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5" as const;
 
 export function SavingsView({
   token,
@@ -51,7 +49,7 @@ export function SavingsView({
         args: account.address ? [account.address] : undefined,
       },
       {
-        address: usdcAavePoolAddress,
+        address: BASE_TOKEN_AAVE_POOL,
         abi: aaveL2PoolAbi,
         functionName: "getReserveData",
         args: [token.address],
@@ -62,7 +60,7 @@ export function SavingsView({
         abi: erc20Abi,
         functionName: "allowance",
         args: account.address
-          ? [account.address, usdcAavePoolAddress]
+          ? [account.address, BASE_TOKEN_AAVE_POOL]
           : undefined,
       },
       {
@@ -93,7 +91,7 @@ export function SavingsView({
 
       const parsedAmount = parseUnits(depositAmount, token.decimals);
       const hash = await writeContractAsync({
-        address: usdcAavePoolAddress,
+        address: BASE_TOKEN_AAVE_POOL,
         abi: aaveL2PoolAbi,
         functionName: "deposit",
         args: [token.address, parsedAmount, account.address, 0],
@@ -119,7 +117,7 @@ export function SavingsView({
         address: token.address,
         abi: erc20Abi,
         functionName: "approve",
-        args: [usdcAavePoolAddress, maxUint256],
+        args: [BASE_TOKEN_AAVE_POOL, maxUint256],
       });
 
       await publicClient.waitForTransactionReceipt({ hash });
@@ -141,7 +139,7 @@ export function SavingsView({
 
       const parsedAmount = parseUnits(withdrawAmount, yieldToken.decimals);
       const hash = await writeContractAsync({
-        address: usdcAavePoolAddress,
+        address: BASE_TOKEN_AAVE_POOL,
         abi: aaveL2PoolAbi,
         functionName: "withdraw",
         args: [token.address, parsedAmount, account.address],

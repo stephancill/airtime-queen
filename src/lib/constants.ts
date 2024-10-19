@@ -16,3 +16,6 @@ export const YIELD_TOKEN: Token = {
   chainId: 8453,
   decimals: 6,
 } as const;
+
+export const BASE_TOKEN_AAVE_POOL =
+  "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5" as const;

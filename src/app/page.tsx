@@ -1,19 +1,19 @@
 "use client";
 
-import { AuthLayout } from "../layouts/AuthLayout";
-import { useSession } from "../providers/SessionProvider";
+import { useQuery } from "@tanstack/react-query";
+import { Settings } from "lucide-react";
+import Link from "next/link";
 import {
   toCoinbaseSmartAccount,
   toWebAuthnAccount,
 } from "viem/account-abstraction";
-import { useClient, useConnect, useAccount } from "wagmi";
-import { smartWalletConnector } from "../lib/connector";
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { WalletView } from "../components/WalletView";
-import { ShopView } from "../components/ShopView";
-import { LogOut } from "lucide-react";
+import { useAccount, useClient, useConnect } from "wagmi";
 import { Button } from "../components/Button";
+import { ShopView } from "../components/ShopView";
+import { WalletView } from "../components/WalletView";
+import { AuthLayout } from "../layouts/AuthLayout";
+import { smartWalletConnector } from "../lib/connector";
+import { useSession } from "../providers/SessionProvider";
 
 export default function Home() {
   const { user, isLoading: isUserLoading, logout } = useSession();
@@ -79,19 +79,19 @@ export default function Home() {
     <AuthLayout>
       <div className="flex flex-col">
         <div className="flex flex-col gap-8">
-          <div className="flex px-4">
+          <div className="flex px-4 items-center">
             <div className="text-3xl font-bold flex-grow">
               {user.phoneNumber}
             </div>
-            <button className="border-none" onClick={logout}>
-              <LogOut size={24} />
-            </button>
+            <Link href="/settings" className="border-none text-black">
+              <Settings size={28} />
+            </Link>
           </div>
           <div className="mt-8 px-4">
             <WalletView />
           </div>
           <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
-          <div className="pb-[100px]">
+          <div className="pb">
             <ShopView />
           </div>
         </div>

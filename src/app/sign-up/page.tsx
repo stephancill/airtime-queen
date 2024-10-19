@@ -106,7 +106,7 @@ export default function SignUpPage() {
 
     try {
       const response = await fetch(
-        `/api/phone-number?phoneNumber=${parsedPhoneNumber.number}`
+        `/api/sign-up?phoneNumber=${parsedPhoneNumber.number}`
       );
 
       if (!response.ok) {
@@ -136,13 +136,24 @@ export default function SignUpPage() {
     }
   }, [challenge, createAccountMutation, parsedPhoneNumber]);
 
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      handleCreateAccount();
+    },
+    [handleCreateAccount]
+  );
+
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {(error as Error).message}</div>;
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-65px)] px-2 md:px-10">
       <div className="text-3xl font-bold">Airtime Wallet</div>
-      <div className="flex flex-col gap-8 h-full my-auto">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-8 h-full my-auto"
+      >
         <div className="flex flex-col gap-2">
           <label className="text-lg" htmlFor="phoneNumber">
             Sign up with phone number
@@ -158,7 +169,7 @@ export default function SignUpPage() {
         </div>
         <div className="flex flex-col gap-2 items-center">
           <Button
-            onClick={handleCreateAccount}
+            type="submit"
             disabled={
               createAccountMutation.isPending ||
               !challenge ||
@@ -183,7 +194,7 @@ export default function SignUpPage() {
             Already have an account? Sign in
           </Link>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

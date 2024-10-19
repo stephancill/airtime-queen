@@ -22,6 +22,11 @@ import { useMutation } from "@tanstack/react-query";
 import { mainnet } from "viem/chains";
 import { useAnimatedVirtualKeyboard } from "../hooks/keyboard";
 import { twMerge } from "tailwind-merge";
+import {
+  E164Number,
+  parsePhoneNumber,
+  PhoneNumber,
+} from "libphonenumber-js/min";
 
 const token = {
   name: "USDC",
@@ -72,11 +77,45 @@ export function WalletView() {
 
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
 
+  const resolveAddressMutation = useMutation({
+    mutationFn: async (phoneNumber: string) => {
+      // This is a placeholder API call. Replace with your actual API endpoint.
+      const response = await fetch(
+        `/api/resolve-address?phoneNumber=${encodeURIComponent(phoneNumber)}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to resolve address");
+      }
+      const data = await response.json();
+
+      console.log("data", data.user?.walletAddress);
+
+      return data.user?.walletAddress;
+    },
+    onSuccess: (address) => {
+      console.log("address", address);
+
+      setResolvedAddress(address);
+    },
+    onError: (error) => {
+      console.error("Error resolving address:", error);
+    },
+  });
+
   useEffect(() => {
+    let phoneNumber: PhoneNumber | null = null;
+    try {
+      phoneNumber = parsePhoneNumber(recipient.replaceAll(" ", ""), {
+        defaultCountry: "ZA",
+      });
+    } catch {}
+
     if (recipient.includes(".")) {
       setResolvedAddress(ensAddress ?? null);
     } else if (isAddress(recipient)) {
       setResolvedAddress(recipient);
+    } else if (recipient && phoneNumber?.isValid()) {
+      resolveAddressMutation.mutate(recipient);
     } else {
       setResolvedAddress(null);
     }
@@ -188,7 +227,7 @@ export function WalletView() {
                       Resolving ENS...
                     </div>
                   )}
-                  {resolvedAddress && recipient.includes(".") && (
+                  {resolvedAddress && (
                     <div className="text-sm text-gray-500">
                       Sending to {truncateAddress(resolvedAddress)}
                     </div>

@@ -1,9 +1,9 @@
+import { useSession } from "@/providers/SessionProvider";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Sheet } from "react-modal-sheet";
 import { Address, erc20Abi, formatUnits } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
-import { useSession } from "@/providers/SessionProvider";
+import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
 import { LoadingScreen } from "./LoadingScreen";
 
@@ -253,70 +253,56 @@ export function ShopView() {
         <div>Error fetching quote: {quoteMutation.error.message}</div>
       )}
 
-      <Sheet
-        isOpen={isOpen}
-        onClose={() => setOpen(false)}
-        className="max-w-[400px] mx-auto"
-        detent="content-height"
-        snapPoints={[1]}
-      >
-        <Sheet.Container className="">
-          <Sheet.Header />
-          <Sheet.Content>
-            {quoteMutation.isSuccess && !purchaseSuccess && (
-              <div className="p-4 gap-8 flex flex-col h-full">
-                <div className="text-2xl">Purchase</div>
-                <div className="flex items-center justify-center">
-                  <ProductCard
-                    className="w-[150px]"
-                    product={quoteMutation.data.product}
-                  />
-                </div>
-                <div className="mt-auto">
-                  <div className="flex flex-row gap-2">
-                    <Button onClick={handleClearQuote} variant="secondary">
-                      Back
-                    </Button>
-                    <Button
-                      onClick={handleBuy}
-                      disabled={
-                        fulfillMutation.isPending || isWriteContractPending
-                      }
-                    >
-                      {fulfillMutation.isPending || isWriteContractPending
-                        ? "Processing..."
-                        : `Pay $${formatUnits(
-                            BigInt(quoteMutation.data.quote.tokenQuote.amount),
-                            quoteMutation.data.quote.tokenQuote.decimals
-                          )}`}
-                    </Button>
-                  </div>
-                </div>
+      <BottomSheetModal isOpen={isOpen} setOpen={setOpen}>
+        {quoteMutation.isSuccess && !purchaseSuccess && (
+          <div className="gap-8 flex flex-col h-full">
+            <div className="text-2xl">Purchase</div>
+            <div className="flex items-center justify-center">
+              <ProductCard
+                className="w-[150px]"
+                product={quoteMutation.data.product}
+              />
+            </div>
+            <div className="mt-auto">
+              <div className="flex flex-row gap-2">
+                <Button onClick={handleClearQuote} variant="secondary">
+                  Back
+                </Button>
+                <Button
+                  onClick={handleBuy}
+                  disabled={fulfillMutation.isPending || isWriteContractPending}
+                >
+                  {fulfillMutation.isPending || isWriteContractPending
+                    ? "Processing..."
+                    : `Pay $${formatUnits(
+                        BigInt(quoteMutation.data.quote.tokenQuote.amount),
+                        quoteMutation.data.quote.tokenQuote.decimals
+                      )}`}
+                </Button>
               </div>
-            )}
-            {purchaseSuccess && (
-              <div className="p-4 gap-8 flex flex-col h-full">
-                <div className="text-2xl">Purchase Successful!</div>
-                <div className="flex items-center justify-center">
-                  <ProductCard
-                    className="w-[150px]"
-                    product={quoteMutation.data!.product}
-                  />
-                </div>
-                <div className="mt-auto">
-                  <Button onClick={handleBackFromSuccess}>Back</Button>
-                </div>
-              </div>
-            )}
-            {fulfillMutation.isError && (
-              <div className="mt-4 text-red-500">
-                Error fulfilling order: {fulfillMutation.error.message}
-              </div>
-            )}
-          </Sheet.Content>
-        </Sheet.Container>
-        <Sheet.Backdrop onTap={() => setOpen(false)} />
-      </Sheet>
+            </div>
+          </div>
+        )}
+        {purchaseSuccess && (
+          <div className="gap-8 flex flex-col h-full">
+            <div className="text-2xl">Purchase Successful!</div>
+            <div className="flex items-center justify-center">
+              <ProductCard
+                className="w-[150px]"
+                product={quoteMutation.data!.product}
+              />
+            </div>
+            <div className="mt-auto">
+              <Button onClick={handleBackFromSuccess}>Back</Button>
+            </div>
+          </div>
+        )}
+        {fulfillMutation.isError && (
+          <div className="mt-4 text-red-500">
+            Error fulfilling order: {fulfillMutation.error.message}
+          </div>
+        )}
+      </BottomSheetModal>
     </div>
   );
 }

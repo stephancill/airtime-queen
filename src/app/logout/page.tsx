@@ -1,10 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { AUTH_SESSION_COOKIE_NAME } from "@/lib/constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
-import { AUTH_SESSION_COOKIE_NAME } from "../../lib/constants";
+import { useEffect } from "react";
 
 export default function LogoutPage() {
   const queryClient = useQueryClient();

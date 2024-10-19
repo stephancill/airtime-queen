@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/Button";
+import { CHALLENGE_DURATION_SECONDS } from "@/lib/constants";
+import { createUUID } from "@/lib/utils";
+import { useSession } from "@/providers/SessionProvider";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { E164Number } from "libphonenumber-js/core";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import PhoneInput, { parsePhoneNumber } from "react-phone-number-input";
 import { Hex, hexToBytes } from "viem";
 import { createCredential } from "webauthn-p256";
-import { CHALLENGE_DURATION_SECONDS } from "@/lib/constants";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { Button } from "../../components/Button";
-import { createUUID } from "../../lib/utils";
-import { useSession } from "../../providers/SessionProvider";
-import PhoneInput, { parsePhoneNumber } from "react-phone-number-input";
-import { E164Number } from "libphonenumber-js/core";
 
 import "react-phone-number-input/style.css";
 

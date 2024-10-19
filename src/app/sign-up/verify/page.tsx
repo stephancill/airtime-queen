@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { Button } from "@/components/Button";
+import { useSession } from "@/providers/SessionProvider";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useSession } from "../../../providers/SessionProvider";
-import { Button } from "../../../components/Button";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
 
 export default function VerifyPhonePage() {
   const { user } = useSession();

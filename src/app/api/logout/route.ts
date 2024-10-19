@@ -1,4 +1,4 @@
-import { AUTH_SESSION_COOKIE_NAME } from "../../../lib/constants";
+import { AUTH_SESSION_COOKIE_NAME } from "@/lib/constants";
 
 export async function POST() {
   return new Response(null, {

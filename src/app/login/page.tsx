@@ -1,15 +1,15 @@
 "use client";
 
+import { Button } from "@/components/Button";
 import { CHALLENGE_DURATION_SECONDS } from "@/lib/constants";
+import { createUUID, serializeSignReturnType } from "@/lib/utils";
+import { useSession } from "@/providers/SessionProvider";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Hex } from "viem";
 import { sign, SignReturnType, WebAuthnData } from "webauthn-p256";
-import { Button } from "../../components/Button";
-import { useSession } from "../../providers/SessionProvider";
-import { createUUID, serializeSignReturnType } from "../../lib/utils";
 
 /**
  * Lets the user sign in using a passkey and stores the user metadata in local storage.

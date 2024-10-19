@@ -18,6 +18,7 @@ import "react-phone-number-input/style.css";
 export default function SignUpPage() {
   const [phoneNumber, setPhoneNumber] = useState<E164Number>();
   const [nonce] = useState(() => createUUID());
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const parsedPhoneNumber = useMemo(() => {
     if (!phoneNumber) return undefined;
@@ -101,17 +102,39 @@ export default function SignUpPage() {
   const handleCreateAccount = useCallback(async () => {
     if (!challenge || !parsedPhoneNumber?.isValid()) return;
 
-    const credential = await createCredential({
-      challenge: hexToBytes(challenge),
-      user: {
-        name: parsedPhoneNumber.number,
-      },
-    });
-    createAccountMutation.mutate({
-      credential,
-      phoneNumber: parsedPhoneNumber.number,
-    });
-  }, [challenge, createAccountMutation, phoneNumber]);
+    setPhoneError(null);
+
+    try {
+      const response = await fetch(
+        `/api/phone-number?phoneNumber=${parsedPhoneNumber.number}`
+      );
+
+      if (!response.ok) {
+        const { error } = await response.json();
+        throw new Error(error || "Failed to check phone number availability");
+      }
+
+      const { available } = await response.json();
+
+      if (!available) {
+        setPhoneError("Phone number already registered");
+        return;
+      }
+
+      const credential = await createCredential({
+        challenge: hexToBytes(challenge),
+        user: {
+          name: parsedPhoneNumber.number,
+        },
+      });
+      createAccountMutation.mutate({
+        credential,
+        phoneNumber: parsedPhoneNumber.number,
+      });
+    } catch (error) {
+      setPhoneError((error as Error).message);
+    }
+  }, [challenge, createAccountMutation, parsedPhoneNumber]);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {(error as Error).message}</div>;
@@ -131,6 +154,7 @@ export default function SignUpPage() {
             defaultCountry="ZA"
             className="border border-gray-300 rounded-md p-4 text-lg"
           />
+          {phoneError && <div className="text-red-500">{phoneError}</div>}
         </div>
         <div className="flex flex-col gap-2 items-center">
           <Button

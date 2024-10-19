@@ -21,13 +21,8 @@ import {
 } from "wagmi";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
-
-const token = {
-  name: "USDC",
-  address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  chainId: 8453,
-  decimals: 6,
-} as const;
+import { BASE_TOKEN } from "../lib/constants";
+import { Token } from "../types/token";
 
 const ensConfig = createConfig({
   chains: [mainnet],
@@ -37,7 +32,7 @@ const ensConfig = createConfig({
   connectors: [],
 });
 
-export function WalletView() {
+export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
   const account = useAccount();
   const [copied, setCopied] = useState(false);
   const [isOpen, setOpen] = useState(false);
@@ -71,7 +66,6 @@ export function WalletView() {
 
   const resolveAddressMutation = useMutation({
     mutationFn: async (phoneNumber: string) => {
-      // This is a placeholder API call. Replace with your actual API endpoint.
       const response = await fetch(
         `/api/resolve-address?phoneNumber=${encodeURIComponent(phoneNumber)}`
       );
@@ -120,7 +114,7 @@ export function WalletView() {
 
       const parsedAmount = parseUnits(amount, token.decimals);
       const hash = await writeContractAsync({
-        address: token.address,
+        address: BASE_TOKEN.address,
         abi: erc20Abi,
         functionName: "transfer",
         args: [getAddress(resolvedAddress), parsedAmount],
@@ -149,7 +143,7 @@ export function WalletView() {
     sendMutation.mutate();
   };
 
-  const handleBackFromSuccess = () => {
+  const resetSendModal = () => {
     setTransactionSuccess(false);
     setTransactionHash(null);
     setOpen(false);
@@ -187,72 +181,75 @@ export function WalletView() {
       </div>
 
       <BottomSheetModal isOpen={isOpen} setOpen={setOpen}>
-        {!transactionSuccess ? (
-          <div className="flex flex-col gap-6">
-            <div className="text-2xl">Send</div>
-            <div>
+        <div className="flex flex-col gap-6">
+          <div className="text-2xl">Send</div>
+          {!transactionSuccess ? (
+            <>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Recipient Address or ENS"
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+                {isEnsLoading && (
+                  <div className="text-sm text-gray-500">Resolving ENS...</div>
+                )}
+                {resolvedAddress && (
+                  <div className="text-sm text-gray-500">
+                    Sending to {truncateAddress(resolvedAddress)}
+                  </div>
+                )}
+              </div>
               <input
-                type="text"
-                placeholder="Recipient Address or ENS"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                className="p-2 border rounded w-full"
+                type="number"
+                placeholder="Amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="p-2 border rounded"
               />
-              {isEnsLoading && (
-                <div className="text-sm text-gray-500">Resolving ENS...</div>
-              )}
-              {resolvedAddress && (
-                <div className="text-sm text-gray-500">
-                  Sending to {truncateAddress(resolvedAddress)}
+              <div className="flex flex-row gap-2">
+                <Button onClick={() => setOpen(false)} variant="secondary">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSend}
+                  disabled={
+                    !resolvedAddress || !amount || sendMutation.isPending
+                  }
+                >
+                  {sendMutation.isPending ? "Sending..." : "Send"}
+                </Button>
+              </div>
+              {sendMutation.isError && (
+                <div className="text-red-500">
+                  Error: {sendMutation.error.message}
                 </div>
               )}
-            </div>
-            <input
-              type="number"
-              placeholder="Amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="p-2 border rounded"
-            />
-            <div className="flex flex-row gap-2">
-              <Button onClick={() => setOpen(false)} variant="secondary">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSend}
-                disabled={!resolvedAddress || !amount || sendMutation.isPending}
-              >
-                {sendMutation.isPending ? "Sending..." : "Send"}
-              </Button>
-            </div>
-            {sendMutation.isError && (
-              <div className="text-red-500">
-                Error: {sendMutation.error.message}
+            </>
+          ) : (
+            <>
+              <div className="flex justify-center">
+                <Check size={60} className="text-green-500" />
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            <div className="text-2xl">Send</div>
-            <div className="flex justify-center">
-              <Check size={60} className="text-green-500" />
-            </div>
-            <div className="text-center">
-              Your transaction has been successfully sent.
-            </div>
-            {transactionHash && (
-              <a
-                href={`https://blockscan.com/tx/${transactionHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
-              >
-                View Transaction <ExternalLink size={16} />
-              </a>
-            )}
-            <Button onClick={handleBackFromSuccess}>Close</Button>
-          </div>
-        )}
+              <div className="text-center">
+                Your transaction has been successfully sent.
+              </div>
+              {transactionHash && (
+                <a
+                  href={`https://blockscan.com/tx/${transactionHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
+                >
+                  View Transaction <ExternalLink size={16} />
+                </a>
+              )}
+              <Button onClick={resetSendModal}>Close</Button>
+            </>
+          )}
+        </div>
       </BottomSheetModal>
     </div>
   );

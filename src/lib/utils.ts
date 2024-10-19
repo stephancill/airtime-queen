@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fallback, Hex, http } from "viem";
+import { fallback, Hex, http, toHex } from "viem";
 import { SignReturnType, WebAuthnData } from "webauthn-p256";
 
 export function createProxyRequestHandler(
@@ -112,4 +112,11 @@ export function serializeSignReturnType(credential: SignReturnType) {
   };
 
   return credentialToSend;
+}
+
+export function bigintReplacer(key: string, value: any) {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  return value;
 }

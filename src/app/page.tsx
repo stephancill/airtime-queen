@@ -8,6 +8,8 @@ import { useSession } from "@/providers/SessionProvider";
 import { useSmartWalletAccount } from "@/providers/SmartWalletAccountProvider";
 import { Settings } from "lucide-react";
 import Link from "next/link";
+import { SavingsView } from "../components/SavingsView";
+import { BASE_TOKEN, YIELD_TOKEN } from "../lib/constants";
 
 export default function Home() {
   const { user, isLoading: isUserLoading } = useSession();
@@ -39,7 +41,7 @@ export default function Home() {
   return (
     <AuthLayout>
       <div className="flex flex-col">
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-8 mb-[100px]">
           <div className="flex px-4 items-center">
             <div className="text-3xl font-bold flex-grow">
               {user.phoneNumber}
@@ -49,11 +51,15 @@ export default function Home() {
             </Link>
           </div>
           <div className="mt-8 px-4">
-            <WalletView />
+            <WalletView token={BASE_TOKEN} />
           </div>
           <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
-          <div className="pb">
+          <div>
             <ShopView />
+          </div>
+          <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
+          <div className="px-4">
+            <SavingsView token={BASE_TOKEN} yieldToken={YIELD_TOKEN} />
           </div>
         </div>
       </div>

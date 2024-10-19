@@ -1,33 +1,26 @@
-import { Check, Copy, Send, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { truncateAddress } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
+import { parsePhoneNumber, PhoneNumber } from "libphonenumber-js/min";
+import { Check, Copy, ExternalLink, Send } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   erc20Abi,
   formatUnits,
-  parseUnits,
-  isAddress,
   getAddress,
   http,
+  isAddress,
+  parseUnits,
 } from "viem";
+import { mainnet } from "viem/chains";
 import {
+  createConfig,
   useAccount,
+  useEnsAddress,
   useReadContract,
   useWriteContract,
-  useEnsAddress,
-  createConfig,
 } from "wagmi";
-import { truncateAddress } from "@/lib/utils";
+import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
-import { Sheet } from "react-modal-sheet";
-import { useMutation } from "@tanstack/react-query";
-import { mainnet } from "viem/chains";
-import { useAnimatedVirtualKeyboard } from "@/hooks/keyboard";
-import { twMerge } from "tailwind-merge";
-import {
-  E164Number,
-  parsePhoneNumber,
-  PhoneNumber,
-} from "libphonenumber-js/min";
-import { LoadingScreen } from "./LoadingScreen";
 
 const token = {
   name: "USDC",
@@ -53,8 +46,6 @@ export function WalletView() {
   const { writeContractAsync } = useWriteContract();
   const [transactionSuccess, setTransactionSuccess] = useState(false);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
-  const { keyboardHeight, isKeyboardOpen, keyboardHeightRaw } =
-    useAnimatedVirtualKeyboard();
 
   const {
     data: tokenBalance,
@@ -195,95 +186,74 @@ export function WalletView() {
         </Button>
       </div>
 
-      <Sheet
-        isOpen={isOpen}
-        onClose={() => !sendMutation.isPending && setOpen(false)}
-        className="max-w-[400px] mx-auto"
-        detent="content-height"
-        snapPoints={[1]}
-      >
-        <Sheet.Container>
-          <Sheet.Header />
-          <Sheet.Content
-            className={twMerge(`${!isKeyboardOpen ? "p-4" : ""}`, "px-4")}
-            style={{
-              paddingBottom: keyboardHeight,
-            }}
-          >
-            {!transactionSuccess ? (
-              <div className="flex flex-col gap-6">
-                <div className="text-2xl">Send</div>
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Recipient Address or ENS"
-                    value={recipient}
-                    onChange={(e) => setRecipient(e.target.value)}
-                    className="p-2 border rounded w-full"
-                  />
-                  {isEnsLoading && (
-                    <div className="text-sm text-gray-500">
-                      Resolving ENS...
-                    </div>
-                  )}
-                  {resolvedAddress && (
-                    <div className="text-sm text-gray-500">
-                      Sending to {truncateAddress(resolvedAddress)}
-                    </div>
-                  )}
+      <BottomSheetModal isOpen={isOpen} setOpen={setOpen}>
+        {!transactionSuccess ? (
+          <div className="flex flex-col gap-6">
+            <div className="text-2xl">Send</div>
+            <div>
+              <input
+                type="text"
+                placeholder="Recipient Address or ENS"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+                className="p-2 border rounded w-full"
+              />
+              {isEnsLoading && (
+                <div className="text-sm text-gray-500">Resolving ENS...</div>
+              )}
+              {resolvedAddress && (
+                <div className="text-sm text-gray-500">
+                  Sending to {truncateAddress(resolvedAddress)}
                 </div>
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="p-2 border rounded"
-                />
-                <div className="flex flex-row gap-2">
-                  <Button onClick={() => setOpen(false)} variant="secondary">
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSend}
-                    disabled={
-                      !resolvedAddress || !amount || sendMutation.isPending
-                    }
-                  >
-                    {sendMutation.isPending ? "Sending..." : "Send"}
-                  </Button>
-                </div>
-                {sendMutation.isError && (
-                  <div className="text-red-500">
-                    Error: {sendMutation.error.message}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-6">
-                <div className="text-2xl">Send</div>
-                <div className="flex justify-center">
-                  <Check size={60} className="text-green-500" />
-                </div>
-                <div className="text-center">
-                  Your transaction has been successfully sent.
-                </div>
-                {transactionHash && (
-                  <a
-                    href={`https://blockscan.com/tx/${transactionHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
-                  >
-                    View Transaction <ExternalLink size={16} />
-                  </a>
-                )}
-                <Button onClick={handleBackFromSuccess}>Close</Button>
+              )}
+            </div>
+            <input
+              type="number"
+              placeholder="Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="p-2 border rounded"
+            />
+            <div className="flex flex-row gap-2">
+              <Button onClick={() => setOpen(false)} variant="secondary">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSend}
+                disabled={!resolvedAddress || !amount || sendMutation.isPending}
+              >
+                {sendMutation.isPending ? "Sending..." : "Send"}
+              </Button>
+            </div>
+            {sendMutation.isError && (
+              <div className="text-red-500">
+                Error: {sendMutation.error.message}
               </div>
             )}
-          </Sheet.Content>
-        </Sheet.Container>
-        <Sheet.Backdrop onTap={() => setOpen(false)} />
-      </Sheet>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <div className="text-2xl">Send</div>
+            <div className="flex justify-center">
+              <Check size={60} className="text-green-500" />
+            </div>
+            <div className="text-center">
+              Your transaction has been successfully sent.
+            </div>
+            {transactionHash && (
+              <a
+                href={`https://blockscan.com/tx/${transactionHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
+              >
+                View Transaction <ExternalLink size={16} />
+              </a>
+            )}
+            <Button onClick={handleBackFromSuccess}>Close</Button>
+          </div>
+        )}
+      </BottomSheetModal>
     </div>
   );
 }

@@ -23,5 +23,10 @@ export const GET = withAuth(async (req) => {
     .where("phoneNumber", "=", parsedPhoneNumber.number)
     .select(["walletAddress"])
     .executeTakeFirst();
+
+  if (!user) {
+    return Response.json({ error: "User not found" }, { status: 404 });
+  }
+
   return Response.json({ user });
 });

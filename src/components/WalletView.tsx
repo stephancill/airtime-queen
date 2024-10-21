@@ -188,7 +188,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
               <div>
                 <input
                   type="text"
-                  placeholder="Recipient Address or ENS"
+                  placeholder="Recipient address, username, or phone number"
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
                   className="p-2 border rounded w-full"

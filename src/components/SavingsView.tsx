@@ -93,7 +93,7 @@ export function SavingsView({
       const hash = await writeContractAsync({
         address: BASE_TOKEN_AAVE_POOL,
         abi: aaveL2PoolAbi,
-        functionName: "deposit",
+        functionName: "supply",
         args: [token.address, parsedAmount, account.address, 0],
       });
 

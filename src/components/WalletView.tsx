@@ -3,7 +3,14 @@ import { truncateAddress } from "@/lib/utils";
 import { Token } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
 import { parsePhoneNumber, PhoneNumber } from "libphonenumber-js/min";
-import { Check, Copy, ExternalLink, Send } from "lucide-react";
+import {
+  Check,
+  Copy,
+  CreditCard,
+  ExternalLink,
+  MoveDownLeft,
+  Send,
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -24,6 +31,7 @@ import {
 } from "wagmi";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
+import { QRCodeSVG } from "qrcode.react";
 
 const ensConfig = createConfig({
   chains: [mainnet],
@@ -44,6 +52,9 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
   const [amount, setAmount] = useState("");
   const [transactionSuccess, setTransactionSuccess] = useState(false);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
+  const [isReceiveOpen, setReceiveOpen] = useState(false);
+  const [receiveAmount, setReceiveAmount] = useState("");
+  const [receiveLink, setReceiveLink] = useState("");
 
   const {
     data: tokenBalance,
@@ -161,6 +172,36 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
     setAmount("");
   };
 
+  const handleReceive = () => {
+    if (!account.address) return;
+
+    const baseUrl = window.location.origin;
+    const searchParams = new URLSearchParams({
+      intent: "send",
+      recipient: account.address,
+      amount: receiveAmount,
+    });
+    const link = `${baseUrl}?${searchParams.toString()}`;
+    setReceiveLink(link);
+  };
+
+  const handleBackReceive = () => {
+    setReceiveLink("");
+    setReceiveAmount("");
+  };
+
+  const handleCopyReceiveLink = () => {
+    navigator.clipboard.writeText(receiveLink);
+    setCopied(true);
+  };
+
+  useEffect(() => {
+    if (copied) {
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copied]);
+
   if (!account.address) return null;
 
   return (
@@ -181,11 +222,17 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
           <div>{copied ? <Check size={16} /> : <Copy size={16} />}</div>
         </button>
       </div>
-      <div>
+      <div className="flex flex-row gap-4">
         <Button onClick={() => setOpen(true)}>
           <div className="text-xl">Send</div>
           <div>
             <Send size={18} />
+          </div>
+        </Button>
+        <Button variant="secondary" onClick={() => setReceiveOpen(true)}>
+          <div className="text-xl">Receive</div>
+          <div>
+            <MoveDownLeft size={18} />
           </div>
         </Button>
       </div>
@@ -257,6 +304,42 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
                 </a>
               )}
               <Button onClick={resetSendModal}>Close</Button>
+            </>
+          )}
+        </div>
+      </BottomSheetModal>
+
+      <BottomSheetModal isOpen={isReceiveOpen} setOpen={setReceiveOpen}>
+        <div className="flex flex-col gap-6">
+          <div className="text-2xl">Receive</div>
+          {!receiveLink ? (
+            <>
+              <input
+                type="number"
+                placeholder="Amount (optional)"
+                value={receiveAmount}
+                onChange={(e) => setReceiveAmount(e.target.value)}
+                className="p-2 border rounded"
+              />
+              <Button onClick={handleReceive}>Generate Link</Button>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-center">
+                <QRCodeSVG value={receiveLink} size={200} />
+              </div>
+              <div className="text-sm text-gray-500 text-center">
+                Ask the sender to scan this QR code or share this link with them
+              </div>
+              <div className="flex flex-row gap-2">
+                <Button variant="secondary" onClick={handleBackReceive}>
+                  Back
+                </Button>
+                <Button onClick={handleCopyReceiveLink}>
+                  <div>{copied ? "Copied" : "Copy"}</div>
+                  <div>{copied ? <Check size={16} /> : <Copy size={16} />}</div>
+                </Button>
+              </div>
             </>
           )}
         </div>

@@ -1,7 +1,10 @@
+import { BASE_TOKEN } from "@/lib/constants";
 import { truncateAddress } from "@/lib/utils";
+import { Token } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
 import { parsePhoneNumber, PhoneNumber } from "libphonenumber-js/min";
 import { Check, Copy, ExternalLink, Send } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   erc20Abi,
@@ -21,8 +24,6 @@ import {
 } from "wagmi";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
-import { BASE_TOKEN } from "../lib/constants";
-import { Token } from "../types/token";
 
 const ensConfig = createConfig({
   chains: [mainnet],
@@ -34,11 +35,13 @@ const ensConfig = createConfig({
 
 export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
   const account = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const searchParams = useSearchParams();
+
   const [copied, setCopied] = useState(false);
   const [isOpen, setOpen] = useState(false);
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const { writeContractAsync } = useWriteContract();
   const [transactionSuccess, setTransactionSuccess] = useState(false);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
 
@@ -74,8 +77,6 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
       }
       const data = await response.json();
 
-      console.log("data", data.user?.walletAddress);
-
       return data.user?.walletAddress;
     },
     onSuccess: (address) => {
@@ -87,6 +88,15 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
       console.error("Error resolving address:", error);
     },
   });
+
+  useEffect(() => {
+    const intent = searchParams.get("intent");
+    if (intent === "send") {
+      setRecipient(searchParams.get("recipient") ?? "");
+      setAmount(searchParams.get("amount") ?? "");
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let phoneNumber: PhoneNumber | null = null;

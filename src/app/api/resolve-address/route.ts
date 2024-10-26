@@ -5,8 +5,6 @@ import { db } from "@/lib/db";
 export const GET = withAuth(async (req) => {
   const phoneNumberRaw = req.nextUrl.searchParams.get("phoneNumber");
 
-  console.log("phoneNumberRaw", phoneNumberRaw);
-
   if (!phoneNumberRaw) {
     return Response.json(
       { error: "Phone number is required" },

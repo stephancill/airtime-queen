@@ -11,6 +11,7 @@ import { useSmartWalletAccount } from "@/providers/SmartWalletAccountProvider";
 import { Settings } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { ClaimView } from "./ClaimView";
 
 export default function HomeView() {
   const { user, isLoading: isUserLoading } = useSession();
@@ -73,6 +74,7 @@ export default function HomeView() {
           <div className="px-4">
             <SavingsView token={BASE_TOKEN} yieldToken={YIELD_TOKEN} />
           </div>
+          <ClaimView />
         </div>
       </div>
     </AuthLayout>

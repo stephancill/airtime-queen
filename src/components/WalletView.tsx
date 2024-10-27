@@ -1,4 +1,4 @@
-import { BASE_TOKEN } from "@/lib/constants";
+import { BASE_TOKEN, LINKDROP_ESCROW_ADDRESS } from "@/lib/constants";
 import { truncateAddress } from "@/lib/utils";
 import { Token } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import {
   ExternalLink,
   MoveDownLeft,
   Send,
+  Link2,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,8 +18,10 @@ import {
   erc20Abi,
   formatUnits,
   getAddress,
+  Hex,
   http,
   isAddress,
+  maxUint256,
   parseUnits,
 } from "viem";
 import { mainnet } from "viem/chains";
@@ -26,12 +29,15 @@ import {
   createConfig,
   useAccount,
   useEnsAddress,
+  usePublicClient,
   useReadContract,
+  useSendTransaction,
   useWriteContract,
 } from "wagmi";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
 import { QRCodeSVG } from "qrcode.react";
+import { linkdropSdk } from "../lib/linkdrop";
 
 const ensConfig = createConfig({
   chains: [mainnet],
@@ -44,10 +50,12 @@ const ensConfig = createConfig({
 export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
   const account = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { sendTransactionAsync } = useSendTransaction();
   const searchParams = useSearchParams();
+  const publicClient = usePublicClient();
 
   const [copied, setCopied] = useState(false);
-  const [isOpen, setOpen] = useState(false);
+  const [isSendOpen, setIsSendOpen] = useState(false);
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [transactionSuccess, setTransactionSuccess] = useState(false);
@@ -55,6 +63,8 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
   const [isReceiveOpen, setReceiveOpen] = useState(false);
   const [receiveAmount, setReceiveAmount] = useState("");
   const [receiveLink, setReceiveLink] = useState("");
+  const [claimLink, setClaimLink] = useState<string | null>(null);
+  const [needsApproval, setNeedsApproval] = useState(false);
 
   const {
     data: tokenBalance,
@@ -68,6 +78,23 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
     args: account.address ? [account.address] : undefined,
     query: {
       refetchInterval: 1000,
+    },
+  });
+
+  const {
+    data: linkdropEscrowApproval,
+    isLoading: isLoadingLinkdropEscrowApproval,
+    error: errorLinkdropEscrowApproval,
+    refetch: refetchLinkdropEscrowApproval,
+  } = useReadContract({
+    address: BASE_TOKEN.address,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: account.address
+      ? [account.address, LINKDROP_ESCROW_ADDRESS]
+      : undefined,
+    query: {
+      enabled: !!account.address && isSendOpen,
     },
   });
 
@@ -91,8 +118,6 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
       return data.user?.walletAddress;
     },
     onSuccess: (address) => {
-      console.log("address", address);
-
       setResolvedAddress(address);
     },
     onError: (error) => {
@@ -100,14 +125,106 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
     },
   });
 
+  const createClaimLinkMutation = useMutation({
+    mutationFn: async () => {
+      if (!account.address) throw new Error("Account not available");
+
+      const claimLink = await linkdropSdk.createClaimLink({
+        from: account.address,
+        tokenType: "ERC20",
+        chainId: token.chainId,
+        token: token.address,
+        expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).getTime(), // 1 day
+        amount: parseUnits(amount, token.decimals).toString(),
+      });
+
+      const {
+        claimUrl: claimUrlRaw,
+        transferId,
+        txHash,
+      } = await claimLink.deposit({
+        async sendTransaction({ to, value, data }) {
+          const hash = await sendTransactionAsync({
+            to: getAddress(to),
+            value: BigInt(value),
+            data: data as Hex,
+          });
+          return { hash };
+        },
+      });
+
+      // Fix malformed claim URL and add intent param
+      const claimUrl = new URL(claimUrlRaw.replace("/#/code", ""));
+      claimUrl.searchParams.set("intent", "claim");
+
+      console.log("claimUrl", claimUrl.toString());
+      console.log("transferId", transferId);
+      console.log("txHash", txHash);
+
+      return claimUrl.toString();
+    },
+    onSuccess: (link) => {
+      setClaimLink(link);
+    },
+    onError: (error) => {
+      console.error("Error creating claim link:", error);
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async () => {
+      if (!account.address) throw new Error("Account not available");
+
+      const hash = await writeContractAsync({
+        address: BASE_TOKEN.address,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [LINKDROP_ESCROW_ADDRESS, maxUint256],
+      });
+
+      await publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return hash;
+    },
+    onSuccess: () => {
+      refetchLinkdropEscrowApproval();
+      setNeedsApproval(false);
+    },
+    onError: (error) => {
+      console.error("Error approving tokens:", error);
+    },
+  });
+
+  const handleCreateClaimLink = () => {
+    if (
+      linkdropEscrowApproval !== undefined &&
+      linkdropEscrowApproval === BigInt(0)
+    ) {
+      setNeedsApproval(true);
+    } else {
+      createClaimLinkMutation.mutate();
+    }
+  };
+
   useEffect(() => {
     const intent = searchParams.get("intent");
     if (intent === "send") {
       setRecipient(searchParams.get("recipient") ?? "");
       setAmount(searchParams.get("amount") ?? "");
-      setOpen(true);
+      setIsSendOpen(true);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (
+      linkdropEscrowApproval !== undefined &&
+      linkdropEscrowApproval >= BigInt(0)
+    ) {
+      setNeedsApproval(false);
+    }
+  }, [linkdropEscrowApproval]);
 
   useEffect(() => {
     let phoneNumber: PhoneNumber | null = null;
@@ -167,7 +284,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
   const resetSendModal = () => {
     setTransactionSuccess(false);
     setTransactionHash(null);
-    setOpen(false);
+    setIsSendOpen(false);
     setRecipient("");
     setAmount("");
   };
@@ -223,7 +340,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
         </button>
       </div>
       <div className="flex flex-row gap-4">
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={() => setIsSendOpen(true)}>
           <div className="text-xl">Send</div>
           <div>
             <Send size={18} />
@@ -237,52 +354,129 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
         </Button>
       </div>
 
-      <BottomSheetModal isOpen={isOpen} setOpen={setOpen}>
+      <BottomSheetModal isOpen={isSendOpen} setOpen={setIsSendOpen}>
         <div className="flex flex-col gap-6">
           <div className="text-2xl">Send</div>
           {!transactionSuccess ? (
             <>
-              <div>
-                <input
-                  type="text"
-                  placeholder="Recipient address, username, or phone number"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-                {isEnsLoading && (
-                  <div className="text-sm text-gray-500">Resolving ENS...</div>
-                )}
-                {resolvedAddress && (
-                  <div className="text-sm text-gray-500">
-                    Sending to {truncateAddress(resolvedAddress)}
+              {needsApproval ? (
+                <div className="flex flex-col gap-4">
+                  <div className="text-center">
+                    Approval needed to create claim links. This is a one-time
+                    approval.
                   </div>
-                )}
-              </div>
-              <input
-                type="number"
-                placeholder="Amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="p-2 border rounded"
-              />
-              <div className="flex flex-row gap-2">
-                <Button onClick={() => setOpen(false)} variant="secondary">
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSend}
-                  disabled={
-                    !resolvedAddress || !amount || sendMutation.isPending
-                  }
-                >
-                  {sendMutation.isPending ? "Sending..." : "Send"}
-                </Button>
-              </div>
-              {sendMutation.isError && (
-                <div className="text-red-500">
-                  Error: {sendMutation.error.message}
+                  <Button
+                    onClick={() => approveMutation.mutate()}
+                    disabled={approveMutation.isPending}
+                  >
+                    {approveMutation.isPending ? "Approving..." : "Approve"}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setNeedsApproval(false)}
+                  >
+                    Cancel
+                  </Button>
                 </div>
+              ) : (
+                <>
+                  {claimLink ? (
+                    <>
+                      <div className="flex justify-center">
+                        <QRCodeSVG value={claimLink} size={200} />
+                      </div>
+                      <div className="text-sm text-gray-500 text-center">
+                        Share this claim link with the recipient
+                      </div>
+                      <div className="flex flex-row gap-2">
+                        <Button
+                          variant="secondary"
+                          onClick={() => setClaimLink(null)}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(claimLink);
+                            setCopied(true);
+                          }}
+                        >
+                          <div>{copied ? "Copied" : "Copy"}</div>
+                          <div>
+                            {copied ? <Check size={16} /> : <Copy size={16} />}
+                          </div>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="number"
+                        placeholder="Amount"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="p-2 border rounded"
+                      />
+                      <div className="flex flex-row gap-2">
+                        <div>
+                          <Button
+                            onClick={handleCreateClaimLink}
+                            disabled={
+                              !amount || createClaimLinkMutation.isPending
+                            }
+                            variant="secondary"
+                            className="flex-shrink p-3"
+                          >
+                            <Link2 size={18} />
+                          </Button>
+                        </div>
+                        <div className="mt-2 text-gray-500">or</div>
+                        <div className="flex-grow">
+                          <input
+                            type="text"
+                            placeholder="Recipient address, username, or phone number"
+                            value={recipient}
+                            onChange={(e) => setRecipient(e.target.value)}
+                            className="p-2 border rounded w-full"
+                          />
+                          {isEnsLoading && (
+                            <div className="text-sm text-gray-500">
+                              Resolving ENS...
+                            </div>
+                          )}
+                          {resolvedAddress && (
+                            <div className="text-sm text-gray-500">
+                              Sending to {truncateAddress(resolvedAddress)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-row gap-2">
+                        <Button
+                          onClick={() => setIsSendOpen(false)}
+                          variant="secondary"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleSend}
+                          disabled={
+                            !resolvedAddress ||
+                            !amount ||
+                            sendMutation.isPending
+                          }
+                        >
+                          {sendMutation.isPending ? "Sending..." : "Send"}
+                        </Button>
+                      </div>
+                      {sendMutation.isError && (
+                        <div className="text-red-500">
+                          Error: {sendMutation.error.message}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
               )}
             </>
           ) : (
@@ -321,7 +515,15 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
                 onChange={(e) => setReceiveAmount(e.target.value)}
                 className="p-2 border rounded"
               />
-              <Button onClick={handleReceive}>Generate Link</Button>
+              <div className="flex flex-row gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setReceiveOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button onClick={handleReceive}>Next</Button>
+              </div>
             </>
           ) : (
             <>

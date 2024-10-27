@@ -13,6 +13,8 @@ declare global {
       // Merchant
       MERCHANT_API_URL: string;
       MERCHANT_JWT_SECRET: string;
+      // Linkdrop
+      NEXT_PUBLIC_LINKDROP_API_KEY: string;
     }
   }
 }

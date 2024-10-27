@@ -20,17 +20,28 @@ export default function HomeView() {
   const [redactPhoneNumber, setRedactPhoneNumber] = useState(false);
 
   if (!isUserLoading && !user) {
+    const currentPath = window.location.pathname;
+    const searchParams = window.location.search;
+
+    const redirectUrl = `${currentPath}${searchParams}`;
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-65px)] gap-8">
         <div className="text-3xl font-bold">Airtime Wallet</div>
 
         <div className="flex flex-col gap-4 mt-[30px] w-full px-2 md:px-10">
-          <Link href="/sign-up" className="hover:no-underline">
+          <Link
+            href={{ pathname: "/sign-up", query: { redirect: redirectUrl } }}
+            className="hover:no-underline"
+          >
             <Button>
               <div className="text-xl">Create account</div>
             </Button>
           </Link>
-          <Link href="/login" className="text-gray-500 text-center">
+          <Link
+            href={{ pathname: "/login", query: { redirect: redirectUrl } }}
+            className="text-gray-500 text-center"
+          >
             Sign in to existing account
           </Link>
         </div>

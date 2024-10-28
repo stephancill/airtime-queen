@@ -92,7 +92,9 @@ export function ClaimView() {
                 getAddress(BASE_TOKEN.address) ? (
                   <div className="text-[50px] font-bold p-4 text-center">
                     $
-                    {formatUnits(BigInt(claimLink.amount), BASE_TOKEN.decimals)}
+                    {parseFloat(
+                      formatUnits(BigInt(claimLink.amount), BASE_TOKEN.decimals)
+                    ).toFixed(2)}
                   </div>
                 ) : (
                   <div>

@@ -69,8 +69,6 @@ export const PUT = withAuth(
 
       const data = await response.json();
 
-      console.log({ code, data });
-
       if (response.ok) {
         const valid = data.status === "approved" && data.valid;
         if (valid) {

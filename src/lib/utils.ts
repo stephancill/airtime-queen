@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fallback, Hex, http, toHex } from "viem";
+import { fallback, formatUnits, Hex, http } from "viem";
 import { SignReturnType, WebAuthnData } from "webauthn-p256";
+import { Token } from "../types/token";
 
 export function createProxyRequestHandler(
   targetUrl: string | ((req: NextRequest) => string),
@@ -65,10 +66,6 @@ export function createProxyRequestHandler(
 
 export function getTransportByChainId(chainId: number) {
   if (process.env[`EVM_RPC_URL_${chainId}`]) {
-    console.log(
-      `Using custom RPC URL for chain ${chainId}`,
-      process.env[`EVM_RPC_URL_${chainId}`]
-    );
     return fallback([http(process.env[`EVM_RPC_URL_${chainId}`]), http()]);
   } else {
     return http();
@@ -119,4 +116,18 @@ export function bigintReplacer(key: string, value: any) {
     return value.toString();
   }
   return value;
+}
+
+export function formatTokenAmount(amount: bigint, token: Token) {
+  const amountFormatted = `${parseFloat(formatUnits(amount, token.decimals)).toFixed(2)}`;
+
+  if (token.symbol === "USDC" || token.symbol === "aBasUSDC") {
+    return `$${amountFormatted}`;
+  }
+
+  if (token.symbol === "ZARP") {
+    return `R${amountFormatted}`;
+  }
+
+  return `${amountFormatted} ${token.symbol}`;
 }

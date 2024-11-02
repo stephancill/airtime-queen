@@ -1,7 +1,6 @@
 import { aaveL2PoolAbi } from "@/abi/aaveL2Pool";
-import { BASE_TOKEN_AAVE_POOL } from "@/lib/constants";
 import { useSession } from "@/providers/SessionProvider";
-import { Token } from "@/types/token";
+import { Token, YieldToken } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Check, ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -14,13 +13,14 @@ import {
 } from "wagmi";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
+import { formatTokenAmount } from "../lib/utils";
 
 export function SavingsView({
   token,
   yieldToken,
 }: {
   token: Token;
-  yieldToken: Token;
+  yieldToken: YieldToken;
 }) {
   const { user } = useSession();
   const account = useAccount();
@@ -49,7 +49,7 @@ export function SavingsView({
         args: account.address ? [account.address] : undefined,
       },
       {
-        address: BASE_TOKEN_AAVE_POOL,
+        address: yieldToken.yieldPool,
         abi: aaveL2PoolAbi,
         functionName: "getReserveData",
         args: [token.address],
@@ -60,7 +60,7 @@ export function SavingsView({
         abi: erc20Abi,
         functionName: "allowance",
         args: account.address
-          ? [account.address, BASE_TOKEN_AAVE_POOL]
+          ? [account.address, yieldToken.yieldPool]
           : undefined,
       },
       {
@@ -91,7 +91,7 @@ export function SavingsView({
 
       const parsedAmount = parseUnits(depositAmount, token.decimals);
       const hash = await writeContractAsync({
-        address: BASE_TOKEN_AAVE_POOL,
+        address: yieldToken.yieldPool,
         abi: aaveL2PoolAbi,
         functionName: "supply",
         args: [token.address, parsedAmount, account.address, 0],
@@ -117,7 +117,7 @@ export function SavingsView({
         address: token.address,
         abi: erc20Abi,
         functionName: "approve",
-        args: [BASE_TOKEN_AAVE_POOL, maxUint256],
+        args: [yieldToken.yieldPool, maxUint256],
       });
 
       await publicClient.waitForTransactionReceipt({ hash });
@@ -139,7 +139,7 @@ export function SavingsView({
 
       const parsedAmount = parseUnits(withdrawAmount, yieldToken.decimals);
       const hash = await writeContractAsync({
-        address: BASE_TOKEN_AAVE_POOL,
+        address: yieldToken.yieldPool,
         abi: aaveL2PoolAbi,
         functionName: "withdraw",
         args: [token.address, parsedAmount, account.address],
@@ -177,10 +177,7 @@ export function SavingsView({
       <div className="flex gap-2 items-end">
         {yieldTokenBalance !== undefined ? (
           <div className="text-[60px] font-bold">
-            $
-            {parseFloat(
-              formatUnits(yieldTokenBalance, yieldToken.decimals)
-            ).toFixed(2)}
+            {formatTokenAmount(yieldTokenBalance, yieldToken)}
           </div>
         ) : isLoadingBalances ? null : (
           <div>Error: {errorBalances?.message}</div>
@@ -229,11 +226,7 @@ export function SavingsView({
                       )
                     }
                   >
-                    $
-                    {parseFloat(
-                      formatUnits(tokenBalance, token.decimals)
-                    ).toFixed(2)}{" "}
-                    available
+                    {formatTokenAmount(tokenBalance, token)} available
                   </div>
                 )}
               </div>
@@ -331,11 +324,7 @@ export function SavingsView({
                       )
                     }
                   >
-                    $
-                    {parseFloat(
-                      formatUnits(yieldTokenBalance, yieldToken.decimals)
-                    ).toFixed(2)}{" "}
-                    available
+                    {formatTokenAmount(yieldTokenBalance, yieldToken)} available
                   </div>
                 )}
               </div>

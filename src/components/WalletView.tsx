@@ -1,18 +1,18 @@
-import { BASE_TOKEN, LINKDROP_ESCROW_ADDRESS } from "@/lib/constants";
-import { truncateAddress } from "@/lib/utils";
+import { LINKDROP_ESCROW_ADDRESS } from "@/lib/addresses";
+import { formatTokenAmount, truncateAddress } from "@/lib/utils";
 import { Token } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
 import { parsePhoneNumber, PhoneNumber } from "libphonenumber-js/min";
 import {
   Check,
   Copy,
-  CreditCard,
   ExternalLink,
+  Link2,
   MoveDownLeft,
   Send,
-  Link2,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import {
   erc20Abi,
@@ -34,10 +34,9 @@ import {
   useSendTransaction,
   useWriteContract,
 } from "wagmi";
+import { linkdropSdk } from "../lib/linkdrop";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
-import { QRCodeSVG } from "qrcode.react";
-import { linkdropSdk } from "../lib/linkdrop";
 
 const ensConfig = createConfig({
   chains: [mainnet],
@@ -47,7 +46,7 @@ const ensConfig = createConfig({
   connectors: [],
 });
 
-export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
+export function WalletView({ token }: { token: Token }) {
   const account = useAccount();
   const { writeContractAsync } = useWriteContract();
   const { sendTransactionAsync } = useSendTransaction();
@@ -77,7 +76,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
     functionName: "balanceOf",
     args: account.address ? [account.address] : undefined,
     query: {
-      refetchInterval: 1000,
+      refetchInterval: 5_000,
     },
   });
 
@@ -87,7 +86,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
     error: errorLinkdropEscrowApproval,
     refetch: refetchLinkdropEscrowApproval,
   } = useReadContract({
-    address: BASE_TOKEN.address,
+    address: token.address,
     abi: erc20Abi,
     functionName: "allowance",
     args: account.address
@@ -176,7 +175,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
       if (!account.address) throw new Error("Account not available");
 
       const hash = await writeContractAsync({
-        address: BASE_TOKEN.address,
+        address: token.address,
         abi: erc20Abi,
         functionName: "approve",
         args: [LINKDROP_ESCROW_ADDRESS, maxUint256],
@@ -252,7 +251,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
 
       const parsedAmount = parseUnits(amount, token.decimals);
       const hash = await writeContractAsync({
-        address: BASE_TOKEN.address,
+        address: token.address,
         abi: erc20Abi,
         functionName: "transfer",
         args: [getAddress(resolvedAddress), parsedAmount],
@@ -326,7 +325,7 @@ export function WalletView({ token = BASE_TOKEN }: { token: Token }) {
       <div className="flex flex-col items-center justify-between">
         {tokenBalance !== undefined ? (
           <div className="text-[60px] font-bold">
-            ${parseFloat(formatUnits(tokenBalance, token.decimals)).toFixed(2)}
+            {formatTokenAmount(tokenBalance, token)}
           </div>
         ) : isLoadingBalances ? null : (
           <div>Error: {errorBalances?.message}</div>

@@ -125,7 +125,7 @@ export function formatTokenAmount(amount: bigint, token: Token) {
     return `$${amountFormatted}`;
   }
 
-  if (token.symbol === "ZARP") {
+  if (token.symbol === "ZARP" || token.symbol === "aBasZARP") {
     return `R${amountFormatted}`;
   }
 

@@ -25,6 +25,15 @@ export const ZARP_TOKEN: Token = {
   decimals: 18,
 } as const;
 
+// This is a dummy yield token with 0% yield
+export const ZARP_YIELD_TOKEN: YieldToken = {
+  symbol: "aBasZARP",
+  address: "0x381Bb761187411F920aF8350CA9D3D003E5AB4E2",
+  chainId: 8453,
+  decimals: 18,
+  yieldPool: "0x381Bb761187411F920aF8350CA9D3D003E5AB4E2",
+} as const;
+
 export const ALL_TOKENS = [USDC_TOKEN, ZARP_TOKEN];
 
 export const tokenByCountryCode: Record<string, Token> = {
@@ -34,6 +43,7 @@ export const tokenByCountryCode: Record<string, Token> = {
 
 export const yieldTokenByBaseToken: Record<string, YieldToken> = {
   [USDC_TOKEN.address]: USDC_YIELD_TOKEN,
+  [ZARP_TOKEN.address]: ZARP_YIELD_TOKEN,
 };
 
 export function getBaseToken(countryCode: string) {

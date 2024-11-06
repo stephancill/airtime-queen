@@ -1,12 +1,13 @@
+import { USDC_TOKEN, ZARP_TOKEN } from "@/lib/addresses";
+import { linkdropSdk } from "@/lib/linkdrop";
+import { formatTokenAmount } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { linkdropSdk } from "../lib/linkdrop";
-import { BottomSheetModal } from "./BottomSheetModal";
+import { getAddress } from "viem";
 import { useAccount } from "wagmi";
+import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
-import { formatUnits, getAddress } from "viem";
-import { BASE_TOKEN } from "../lib/constants";
 import { TransactionSuccess } from "./TransactionSuccess";
 
 export function ClaimView() {
@@ -89,17 +90,18 @@ export function ClaimView() {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-center justify-center gap-2">
                 {getAddress(claimLink.token) ===
-                getAddress(BASE_TOKEN.address) ? (
+                getAddress(USDC_TOKEN.address) ? (
                   <div className="text-[50px] font-bold p-4 text-center">
-                    $
-                    {parseFloat(
-                      formatUnits(BigInt(claimLink.amount), BASE_TOKEN.decimals)
-                    ).toFixed(2)}
+                    {formatTokenAmount(BigInt(claimLink.amount), USDC_TOKEN)}
+                  </div>
+                ) : getAddress(claimLink.token) ===
+                  getAddress(ZARP_TOKEN.address) ? (
+                  <div className="text-[50px] font-bold p-4 text-center">
+                    {formatTokenAmount(BigInt(claimLink.amount), ZARP_TOKEN)}
                   </div>
                 ) : (
                   <div>
-                    {claimLink.amount} of {claimLink.token} from{" "}
-                    {claimLink.sender}
+                    {claimLink.amount} of {claimLink.token}
                   </div>
                 )}
                 <div className="text-sm text-center">

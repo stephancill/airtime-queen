@@ -5,12 +5,18 @@ import { SavingsView } from "@/components/SavingsView";
 import { ShopView } from "@/components/ShopView";
 import { WalletView } from "@/components/WalletView";
 import { AuthLayout } from "@/layouts/AuthLayout";
-import { BASE_TOKEN, YIELD_TOKEN } from "@/lib/constants";
+import {
+  ALL_TOKENS,
+  getBaseToken,
+  getYieldToken,
+  ZARP_TOKEN,
+} from "@/lib/addresses";
 import { useSession } from "@/providers/SessionProvider";
 import { useSmartWalletAccount } from "@/providers/SmartWalletAccountProvider";
 import { Settings } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Token } from "../types/token";
 import { ClaimView } from "./ClaimView";
 
 export default function HomeView() {
@@ -18,6 +24,15 @@ export default function HomeView() {
   useSmartWalletAccount();
 
   const [redactPhoneNumber, setRedactPhoneNumber] = useState(false);
+  const [baseToken, setBaseToken] = useState<Token>(
+    getBaseToken(user?.countryCode ?? "default")
+  );
+
+  const yieldToken = useMemo(() => getYieldToken(baseToken), [baseToken]);
+
+  useEffect(() => {
+    setBaseToken(getBaseToken(user?.countryCode ?? "default"));
+  }, [user]);
 
   if (!isUserLoading && !user) {
     const currentPath = window.location.pathname;
@@ -74,17 +89,45 @@ export default function HomeView() {
               <Settings size={28} />
             </Link>
           </div>
-          <div className="mt-8 px-4">
-            <WalletView token={BASE_TOKEN} />
+          <div className="mt-8">
+            <div className="flex justify-center mb-4 mx-4">
+              <div className="inline-flex rounded-lg p-1 gap-1 border border-gray-200">
+                {ALL_TOKENS.map((token) => (
+                  <button
+                    key={token.symbol}
+                    className={`px-4 border-none py-2 rounded-md text-sm ${
+                      baseToken.symbol === token.symbol
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                    onClick={() => setBaseToken(token)}
+                  >
+                    {token.symbol}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="px-4">
+              <WalletView token={baseToken} />
+            </div>
           </div>
-          <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
-          <div>
-            <ShopView />
-          </div>
-          <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
-          <div className="px-4">
-            <SavingsView token={BASE_TOKEN} yieldToken={YIELD_TOKEN} />
-          </div>
+          {/* Shop only supports ZARP for now */}
+          {baseToken.address === ZARP_TOKEN.address && (
+            <>
+              <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
+              <div>
+                <ShopView />
+              </div>
+            </>
+          )}
+          {yieldToken && (
+            <>
+              <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
+              <div className="px-4">
+                <SavingsView token={baseToken} yieldToken={yieldToken!} />
+              </div>
+            </>
+          )}
           <ClaimView />
         </div>
       </div>

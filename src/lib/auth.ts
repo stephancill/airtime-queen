@@ -1,10 +1,12 @@
+import { User } from "@/types/user";
+import { parsePhoneNumber } from "libphonenumber-js/min";
 import { Lucia } from "lucia";
 import { NextRequest, NextResponse } from "next/server";
 import { Address } from "viem";
 import { Hex } from "webauthn-p256";
+import { AUTH_SESSION_COOKIE_NAME } from "./constants";
 import { getAuthAdapter } from "./db";
 import { AuthError } from "./errors";
-import { AUTH_SESSION_COOKIE_NAME } from "./constants";
 
 const adapter = getAuthAdapter();
 
@@ -25,8 +27,9 @@ export const lucia = new Lucia(adapter, {
       createdAt: attributes.created_at,
       updatedAt: attributes.updated_at,
       phoneNumber: attributes.phone_number,
+      countryCode: parsePhoneNumber(attributes.phone_number).country!, // This should never fail because phone number is already validated
       verifiedAt: attributes.verified_at,
-    };
+    } satisfies User;
   },
 });
 

@@ -6,6 +6,7 @@ import { useAccount, useWriteContract } from "wagmi";
 import { BottomSheetModal } from "./BottomSheetModal";
 import { Button } from "./Button";
 import { LoadingScreen } from "./LoadingScreen";
+import { formatTokenAmount } from "../lib/utils";
 
 type Product = {
   id: string;
@@ -274,9 +275,12 @@ export function ShopView() {
                 >
                   {fulfillMutation.isPending || isWriteContractPending
                     ? "Processing..."
-                    : `Pay $${formatUnits(
+                    : `Pay ${formatTokenAmount(
                         BigInt(quoteMutation.data.quote.tokenQuote.amount),
-                        quoteMutation.data.quote.tokenQuote.decimals
+                        {
+                          ...quoteMutation.data.quote.tokenQuote,
+                          chainId: 8453,
+                        }
                       )}`}
                 </Button>
               </div>

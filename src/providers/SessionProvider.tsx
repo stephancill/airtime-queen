@@ -1,11 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContext, ReactNode, useContext, useEffect } from "react";
 import { UserRow } from "@/types/db";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import { AUTH_SESSION_COOKIE_NAME } from "@/lib/constants";
+import { createContext, ReactNode, useContext, useEffect } from "react";
+import { User } from "../types/user";
 
-async function fetchUser(): Promise<UserRow> {
+async function fetchUser(): Promise<User> {
   const response = await fetch("/api/user");
 
   if (!response.ok) {
@@ -22,7 +21,7 @@ async function fetchUser(): Promise<UserRow> {
 }
 
 interface SessionContextType {
-  user: UserRow | null | undefined;
+  user: User | null | undefined;
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;

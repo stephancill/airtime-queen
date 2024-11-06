@@ -108,10 +108,10 @@ export const smartWalletConnector = ({
               return {
                 ...estimatedFees,
                 maxFeePerGas: BigInt(
-                  Math.round(Number(estimatedFees.maxFeePerGas) * 1.12) // pimlico bundler needs a buffer
+                  Math.round(Number(estimatedFees.maxFeePerGas) * 1.5) // pimlico bundler needs a buffer
                 ),
                 maxPriorityFeePerGas: BigInt(
-                  Math.round(Number(estimatedFees.maxPriorityFeePerGas) * 1.12) // pimlico bundler needs a buffer
+                  Math.round(Number(estimatedFees.maxPriorityFeePerGas) * 1.5) // pimlico bundler needs a buffer
                 ),
               };
             },

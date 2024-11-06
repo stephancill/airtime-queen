@@ -5,7 +5,12 @@ import { SavingsView } from "@/components/SavingsView";
 import { ShopView } from "@/components/ShopView";
 import { WalletView } from "@/components/WalletView";
 import { AuthLayout } from "@/layouts/AuthLayout";
-import { ALL_TOKENS, getBaseToken, getYieldToken } from "@/lib/addresses";
+import {
+  ALL_TOKENS,
+  getBaseToken,
+  getYieldToken,
+  ZARP_TOKEN,
+} from "@/lib/addresses";
 import { useSession } from "@/providers/SessionProvider";
 import { useSmartWalletAccount } from "@/providers/SmartWalletAccountProvider";
 import { Settings } from "lucide-react";
@@ -106,10 +111,15 @@ export default function HomeView() {
               <WalletView token={baseToken} />
             </div>
           </div>
-          <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
-          <div>
-            <ShopView />
-          </div>
+          {/* Shop only supports ZARP for now */}
+          {baseToken.address === ZARP_TOKEN.address && (
+            <>
+              <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>
+              <div>
+                <ShopView />
+              </div>
+            </>
+          )}
           {yieldToken && (
             <>
               <div className="bg-gray-100 h-[2px] rounded-full mx-4"></div>

@@ -106,9 +106,10 @@ export default function SignUpPage() {
     setPhoneError(null);
 
     try {
-      const response = await fetch(
-        `/api/sign-up?phoneNumber=${parsedPhoneNumber.number}`
-      );
+      const searchParams = new URLSearchParams({
+        phoneNumber: parsedPhoneNumber.number,
+      });
+      const response = await fetch(`/api/sign-up?${searchParams.toString()}`);
 
       if (!response.ok) {
         const { error } = await response.json();

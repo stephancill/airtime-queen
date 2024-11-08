@@ -66,7 +66,7 @@ const createMigrator = async (db: Kysely<Tables>) => {
     provider: new FileMigrationProvider({
       fs,
       path,
-      migrationFolder: path.join(currentDir, "@/", "migrations"),
+      migrationFolder: path.join(currentDir, "../", "migrations"),
     }),
   });
 

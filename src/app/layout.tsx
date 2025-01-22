@@ -4,8 +4,9 @@ import { Providers } from "./providers";
 import Modal from "@/components/Modal";
 
 export const metadata: Metadata = {
-  title: "Airtime Wallet",
-  description: "A free, open-source browser wallet for Ethereum.",
+  title: "Airtime Queen - Airtime & Rewards",
+  description:
+    "Your wallet for buying airtime, earning rewards and free airtime advance",
 };
 
 export default function RootLayout({

@@ -41,9 +41,5 @@ function AuthLayoutContent({ children }: AuthLayoutProps) {
 }
 
 export function AuthLayout({ children }: AuthLayoutProps) {
-  return (
-    <SessionProvider>
-      <AuthLayoutContent>{children}</AuthLayoutContent>
-    </SessionProvider>
-  );
+  return <AuthLayoutContent>{children}</AuthLayoutContent>;
 }

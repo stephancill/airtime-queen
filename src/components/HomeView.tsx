@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/Button";
 import { SavingsView } from "@/components/SavingsView";
 import { ShopView } from "@/components/ShopView";
 import { WalletView } from "@/components/WalletView";
@@ -18,10 +17,31 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Token } from "../types/token";
 import { ClaimView } from "./ClaimView";
+import { Button } from "./ui/button";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSignInWithPasskey } from "@/hooks/useSignInWithPasskey";
 
 export default function HomeView() {
-  const { user, isLoading: isUserLoading } = useSession();
+  const { user, isLoading: isUserLoading, refetch } = useSession();
   useSmartWalletAccount();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const {
+    signInWithPasskey,
+    isPending: isSigningIn,
+    ready,
+  } = useSignInWithPasskey({
+    onSuccess: () => {
+      refetch();
+      const redirectUrl = searchParams.get("redirect");
+      if (redirectUrl) {
+        router.push(decodeURIComponent(redirectUrl));
+      } else {
+        router.push("/");
+      }
+    },
+  });
 
   const [redactPhoneNumber, setRedactPhoneNumber] = useState(false);
   const [baseToken, setBaseToken] = useState<Token>(
@@ -41,8 +61,8 @@ export default function HomeView() {
     const redirectUrl = `${currentPath}${searchParams}`;
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-65px)] gap-8">
-        <div className="text-3xl font-bold">Airtime Wallet</div>
+      <div className="flex flex-col items-center justify-center gap-4 min-h-screen">
+        <div className="text-3xl font-bold">Airtime Queen</div>
 
         <div className="flex flex-col gap-4 mt-[30px] w-full px-2 md:px-10">
           <Link
@@ -53,12 +73,15 @@ export default function HomeView() {
               <div className="text-xl">Create account</div>
             </Button>
           </Link>
-          <Link
-            href={{ pathname: "/login", query: { redirect: redirectUrl } }}
-            className="text-gray-500 text-center"
+          <Button
+            variant={"secondary"}
+            onClick={signInWithPasskey}
+            disabled={isSigningIn || !ready}
           >
-            Sign in to existing account
-          </Link>
+            <div className="text-xl">
+              {isSigningIn ? "Signing in..." : "Sign in to existing account"}
+            </div>
+          </Button>
         </div>
       </div>
     );

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { fallback, formatUnits, Hex, http } from "viem";
 import { SignReturnType, WebAuthnData } from "webauthn-p256";
 import { Token } from "../types/token";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export function createProxyRequestHandler(
   targetUrl: string | ((req: NextRequest) => string),

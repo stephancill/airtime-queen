@@ -3,10 +3,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Address, erc20Abi, formatUnits } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
-import { BottomSheetModal } from "./BottomSheetModal";
-import { Button } from "./Button";
 import { LoadingScreen } from "./LoadingScreen";
 import { formatTokenAmount } from "../lib/utils";
+import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
+import { Button } from "./ui/button";
 
 type Product = {
   id: string;
@@ -254,59 +254,65 @@ export function ShopView() {
         <div>Error fetching quote: {quoteMutation.error.message}</div>
       )}
 
-      <BottomSheetModal isOpen={isOpen} setOpen={setOpen}>
-        {quoteMutation.isSuccess && !purchaseSuccess && (
-          <div className="gap-8 flex flex-col h-full">
-            <div className="text-2xl">Purchase</div>
-            <div className="flex items-center justify-center">
-              <ProductCard
-                className="w-[150px]"
-                product={quoteMutation.data.product}
-              />
-            </div>
-            <div className="mt-auto">
-              <div className="flex flex-row gap-2">
-                <Button onClick={handleClearQuote} variant="secondary">
-                  Back
-                </Button>
-                <Button
-                  onClick={handleBuy}
-                  disabled={fulfillMutation.isPending || isWriteContractPending}
-                >
-                  {fulfillMutation.isPending || isWriteContractPending
-                    ? "Processing..."
-                    : `Pay ${formatTokenAmount(
-                        BigInt(quoteMutation.data.quote.tokenQuote.amount),
-                        {
-                          ...quoteMutation.data.quote.tokenQuote,
-                          chainId: 8453,
-                        }
-                      )}`}
-                </Button>
+      <Drawer open={isOpen} onOpenChange={setOpen}>
+        <DrawerContent>
+          <div className="p-4">
+            {quoteMutation.isSuccess && !purchaseSuccess && (
+              <div className="gap-8 flex flex-col h-full">
+                <div className="text-2xl">Purchase</div>
+                <div className="flex items-center justify-center">
+                  <ProductCard
+                    className="w-[150px]"
+                    product={quoteMutation.data.product}
+                  />
+                </div>
+                <div className="mt-auto">
+                  <div className="flex flex-row gap-2">
+                    <Button onClick={handleClearQuote} variant="secondary">
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleBuy}
+                      disabled={
+                        fulfillMutation.isPending || isWriteContractPending
+                      }
+                    >
+                      {fulfillMutation.isPending || isWriteContractPending
+                        ? "Processing..."
+                        : `Pay ${formatTokenAmount(
+                            BigInt(quoteMutation.data.quote.tokenQuote.amount),
+                            {
+                              ...quoteMutation.data.quote.tokenQuote,
+                              chainId: 8453,
+                            }
+                          )}`}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            {purchaseSuccess && (
+              <div className="gap-8 flex flex-col h-full">
+                <div className="text-2xl">Purchase Successful!</div>
+                <div className="flex items-center justify-center">
+                  <ProductCard
+                    className="w-[150px]"
+                    product={quoteMutation.data!.product}
+                  />
+                </div>
+                <div className="mt-auto">
+                  <Button onClick={handleBackFromSuccess}>Back</Button>
+                </div>
+              </div>
+            )}
+            {fulfillMutation.isError && (
+              <div className="mt-4 text-red-500">
+                Error fulfilling order: {fulfillMutation.error.message}
+              </div>
+            )}
           </div>
-        )}
-        {purchaseSuccess && (
-          <div className="gap-8 flex flex-col h-full">
-            <div className="text-2xl">Purchase Successful!</div>
-            <div className="flex items-center justify-center">
-              <ProductCard
-                className="w-[150px]"
-                product={quoteMutation.data!.product}
-              />
-            </div>
-            <div className="mt-auto">
-              <Button onClick={handleBackFromSuccess}>Back</Button>
-            </div>
-          </div>
-        )}
-        {fulfillMutation.isError && (
-          <div className="mt-4 text-red-500">
-            Error fulfilling order: {fulfillMutation.error.message}
-          </div>
-        )}
-      </BottomSheetModal>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

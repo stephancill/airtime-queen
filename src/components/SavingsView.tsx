@@ -1,4 +1,11 @@
 import { aaveL2PoolAbi } from "@/abi/aaveL2Pool";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { useSession } from "@/providers/SessionProvider";
 import { Token, YieldToken } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
@@ -11,9 +18,8 @@ import {
   useReadContracts,
   useWriteContract,
 } from "wagmi";
-import { BottomSheetModal } from "./BottomSheetModal";
-import { Button } from "./Button";
 import { formatTokenAmount } from "../lib/utils";
+import { Button } from "./ui/button";
 
 export function SavingsView({
   token,
@@ -204,179 +210,190 @@ export function SavingsView({
           </div>
         </Button>
       </div>
-      <BottomSheetModal isOpen={isDepositOpen} setOpen={setIsDepositOpen}>
-        <div className="flex flex-col gap-6">
-          <div className="text-2xl">Deposit</div>
-          {!transactionSuccess ? (
-            <>
-              <div className="flex flex-col gap-2">
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  className="p-2 border rounded"
-                />
-                {tokenBalance !== undefined && (
-                  <div
-                    className="text-sm text-gray-500 cursor-pointer"
-                    onClick={() =>
-                      setDepositAmount(
-                        formatUnits(tokenBalance, token.decimals)
-                      )
-                    }
-                  >
-                    {formatTokenAmount(tokenBalance, token)} available
+      <Drawer open={isDepositOpen} onOpenChange={setIsDepositOpen}>
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>Deposit</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4">
+              {!transactionSuccess ? (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="number"
+                      placeholder="Amount"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      className="p-2 border rounded"
+                    />
+                    {tokenBalance !== undefined && (
+                      <div
+                        className="text-sm text-gray-500 cursor-pointer"
+                        onClick={() =>
+                          setDepositAmount(
+                            formatUnits(tokenBalance, token.decimals)
+                          )
+                        }
+                      >
+                        {formatTokenAmount(tokenBalance, token)} available
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {poolAllowance !== undefined && poolAllowance > 0 ? (
-                <div>
-                  <div className="flex flex-row gap-2">
-                    <Button
-                      onClick={() => setIsDepositOpen(false)}
-                      variant="secondary"
+                  {poolAllowance !== undefined && poolAllowance > 0 ? (
+                    <div>
+                      <div className="flex flex-row gap-2">
+                        <DrawerClose asChild>
+                          <Button variant="secondary">Cancel</Button>
+                        </DrawerClose>
+                        <Button
+                          onClick={() => {
+                            depositMutation.mutate();
+                          }}
+                          disabled={
+                            !account.address ||
+                            !depositAmount ||
+                            depositMutation.isPending
+                          }
+                        >
+                          {depositMutation.isPending
+                            ? "Depositing..."
+                            : "Deposit"}
+                        </Button>
+                      </div>
+                      {depositMutation.error && (
+                        <div className="text-red-500">
+                          Error: {depositMutation.error.message}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={() => approveMutation.mutate()}
+                        disabled={approveMutation.isPending}
+                      >
+                        {approveMutation.isPending ? "Approving..." : "Approve"}
+                      </Button>
+                      <div className="text-sm text-gray-500 text-center">
+                        You need to approve the pool to deposit. Click the
+                        button below to approve.
+                      </div>
+
+                      {approveMutation.error && (
+                        <div className="text-red-500">
+                          Error: {approveMutation.error.message}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-center">
+                    <Check size={60} className="text-green-500" />
+                  </div>
+                  <div className="text-center">
+                    Your deposit has been successfully processed.
+                  </div>
+                  {transactionHash && (
+                    <a
+                      href={`https://blockscan.com/tx/${transactionHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
                     >
-                      Cancel
-                    </Button>
+                      View Transaction <ExternalLink size={16} />
+                    </a>
+                  )}
+                  <Button onClick={resetDepositModal}>Close</Button>
+                </>
+              )}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+      <Drawer open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>Withdraw</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4">
+              {!transactionSuccess ? (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="number"
+                      placeholder="Amount"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      className="p-2 border rounded"
+                    />
+                    {yieldTokenBalance !== undefined && (
+                      <div
+                        className="text-sm text-gray-500 cursor-pointer"
+                        onClick={() =>
+                          setWithdrawAmount(
+                            formatUnits(yieldTokenBalance, yieldToken.decimals)
+                          )
+                        }
+                      >
+                        {formatTokenAmount(yieldTokenBalance, yieldToken)}{" "}
+                        available
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <DrawerClose asChild>
+                      <Button variant="secondary">Cancel</Button>
+                    </DrawerClose>
                     <Button
                       onClick={() => {
-                        depositMutation.mutate();
+                        withdrawMutation.mutate();
                       }}
                       disabled={
                         !account.address ||
-                        !depositAmount ||
-                        depositMutation.isPending
+                        !withdrawAmount ||
+                        withdrawMutation.isPending
                       }
                     >
-                      {depositMutation.isPending ? "Depositing..." : "Deposit"}
+                      {withdrawMutation.isPending
+                        ? "Withdrawing..."
+                        : "Withdraw"}
                     </Button>
                   </div>
-                  {depositMutation.error && (
+                  {withdrawMutation.error && (
                     <div className="text-red-500">
-                      Error: {depositMutation.error.message}
+                      Error: {withdrawMutation.error.message}
                     </div>
                   )}
-                </div>
+                </>
               ) : (
-                <div className="flex flex-col gap-2">
-                  <div className="text-sm text-gray-500 text-center">
-                    You need to approve the pool to deposit. Click the button
-                    below to approve.
+                <>
+                  <div className="flex justify-center">
+                    <Check size={60} className="text-green-500" />
                   </div>
-                  <Button
-                    onClick={() => approveMutation.mutate()}
-                    disabled={approveMutation.isPending}
-                  >
-                    {approveMutation.isPending ? "Approving..." : "Approve"}
-                  </Button>
-
-                  {approveMutation.error && (
-                    <div className="text-red-500">
-                      Error: {approveMutation.error.message}
-                    </div>
+                  <div className="text-center">
+                    Your withdrawal has been successfully processed.
+                  </div>
+                  {transactionHash && (
+                    <a
+                      href={`https://blockscan.com/tx/${transactionHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
+                    >
+                      View Transaction <ExternalLink size={16} />
+                    </a>
                   )}
-                </div>
+                  <Button onClick={resetWithdrawModal}>Close</Button>
+                </>
               )}
-            </>
-          ) : (
-            <>
-              <div className="flex justify-center">
-                <Check size={60} className="text-green-500" />
-              </div>
-              <div className="text-center">
-                Your deposit has been successfully processed.
-              </div>
-              {transactionHash && (
-                <a
-                  href={`https://blockscan.com/tx/${transactionHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
-                >
-                  View Transaction <ExternalLink size={16} />
-                </a>
-              )}
-              <Button onClick={resetDepositModal}>Close</Button>
-            </>
-          )}
-        </div>
-      </BottomSheetModal>
-      <BottomSheetModal isOpen={isWithdrawOpen} setOpen={setIsWithdrawOpen}>
-        <div className="flex flex-col gap-6">
-          <div className="text-2xl">Withdraw</div>
-          {!transactionSuccess ? (
-            <>
-              <div className="flex flex-col gap-2">
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="p-2 border rounded"
-                />
-                {yieldTokenBalance !== undefined && (
-                  <div
-                    className="text-sm text-gray-500 cursor-pointer"
-                    onClick={() =>
-                      setWithdrawAmount(
-                        formatUnits(yieldTokenBalance, yieldToken.decimals)
-                      )
-                    }
-                  >
-                    {formatTokenAmount(yieldTokenBalance, yieldToken)} available
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-row gap-2">
-                <Button
-                  onClick={() => setIsWithdrawOpen(false)}
-                  variant="secondary"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    withdrawMutation.mutate();
-                  }}
-                  disabled={
-                    !account.address ||
-                    !withdrawAmount ||
-                    withdrawMutation.isPending
-                  }
-                >
-                  {withdrawMutation.isPending ? "Withdrawing..." : "Withdraw"}
-                </Button>
-              </div>
-              {withdrawMutation.error && (
-                <div className="text-red-500">
-                  Error: {withdrawMutation.error.message}
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="flex justify-center">
-                <Check size={60} className="text-green-500" />
-              </div>
-              <div className="text-center">
-                Your withdrawal has been successfully processed.
-              </div>
-              {transactionHash && (
-                <a
-                  href={`https://blockscan.com/tx/${transactionHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
-                >
-                  View Transaction <ExternalLink size={16} />
-                </a>
-              )}
-              <Button onClick={resetWithdrawModal}>Close</Button>
-            </>
-          )}
-        </div>
-      </BottomSheetModal>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

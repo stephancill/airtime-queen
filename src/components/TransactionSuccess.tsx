@@ -1,5 +1,5 @@
 import { Check, ExternalLink } from "lucide-react";
-import { Button } from "./Button";
+import { Button } from "./ui/button";
 
 interface TransactionSuccessProps {
   message?: string;

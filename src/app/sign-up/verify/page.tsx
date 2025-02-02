@@ -1,11 +1,11 @@
 "use client";
 
-import { Button } from "@/components/Button";
 import { useSession } from "@/providers/SessionProvider";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
+import { Button } from "../../../components/ui/button";
 
 export default function VerifyPhonePage() {
   const { user } = useSession();
@@ -67,8 +67,8 @@ export default function VerifyPhonePage() {
   }, [verifyCodeMutation, verificationCode]);
 
   return (
-    <div className="flex flex-col min-h-[calc(100dvh-65px)] px-2 md:px-10">
-      <div className="text-3xl font-bold">Airtime Wallet</div>
+    <div className="flex flex-col px-2 md:px-10">
+      <div className="text-3xl font-bold">Airtime Queen</div>
       <div className="flex flex-col gap-8 h-full my-auto">
         <h1 className="text-2xl font-semibold">Verify Phone Number</h1>
         <div className="flex flex-col gap-2">

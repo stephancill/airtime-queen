@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/Button";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { CHALLENGE_DURATION_SECONDS } from "@/lib/constants";
 import { createUUID } from "@/lib/utils";
@@ -15,6 +14,7 @@ import { Hex, hexToBytes } from "viem";
 import { createCredential } from "webauthn-p256";
 
 import "react-phone-number-input/style.css";
+import { Button } from "../../components/ui/button";
 
 export default function SignUpPage() {
   const [phoneNumber, setPhoneNumber] = useState<E164Number>();
@@ -151,7 +151,7 @@ export default function SignUpPage() {
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-65px)] px-2 md:px-10">
-      <div className="text-3xl font-bold">Airtime Wallet</div>
+      <div className="text-3xl font-bold">Airtime Queen</div>
       <form
         onSubmit={handleSubmit}
         className="flex flex-col gap-8 h-full my-auto"

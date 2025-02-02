@@ -4,7 +4,7 @@ import { AuthLayout } from "@/layouts/AuthLayout";
 import { useSession } from "@/providers/SessionProvider";
 import { ArrowLeft, Settings } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/Button";
+import { Button } from "../../components/ui/button";
 
 export default function SettingsPage() {
   const { logout } = useSession();

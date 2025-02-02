@@ -1,3 +1,9 @@
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { LINKDROP_ESCROW_ADDRESS } from "@/lib/addresses";
 import { formatTokenAmount, truncateAddress } from "@/lib/utils";
 import { Token } from "@/types/token";
@@ -16,7 +22,6 @@ import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import {
   erc20Abi,
-  formatUnits,
   getAddress,
   Hex,
   http,
@@ -35,8 +40,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { linkdropSdk } from "../lib/linkdrop";
-import { BottomSheetModal } from "./BottomSheetModal";
-import { Button } from "./Button";
+import { Button } from "./ui/button";
 
 const ensConfig = createConfig({
   chains: [mainnet],
@@ -353,198 +357,217 @@ export function WalletView({ token }: { token: Token }) {
         </Button>
       </div>
 
-      <BottomSheetModal isOpen={isSendOpen} setOpen={setIsSendOpen}>
-        <div className="flex flex-col gap-6">
-          <div className="text-2xl">Send</div>
-          {!transactionSuccess ? (
-            <>
-              {needsApproval ? (
-                <div className="flex flex-col gap-4">
-                  <div className="text-center">
-                    Approval needed to create claim links. This is a one-time
-                    approval.
-                  </div>
-                  <Button
-                    onClick={() => approveMutation.mutate()}
-                    disabled={approveMutation.isPending}
-                  >
-                    {approveMutation.isPending ? "Approving..." : "Approve"}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setNeedsApproval(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
+      <Drawer open={isSendOpen} onOpenChange={setIsSendOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Send</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4">
+            <div className="flex flex-col gap-6">
+              {!transactionSuccess ? (
                 <>
-                  {claimLink ? (
-                    <>
-                      <div className="flex justify-center">
-                        <QRCodeSVG value={claimLink} size={200} />
+                  {needsApproval ? (
+                    <div className="flex flex-col gap-4">
+                      <div className="text-center">
+                        Approval needed to create claim links. This is a
+                        one-time approval.
                       </div>
-                      <div className="text-sm text-gray-500 text-center">
-                        Share this claim link with the recipient
-                      </div>
-                      <div className="flex flex-row gap-2">
-                        <Button
-                          variant="secondary"
-                          onClick={() => setClaimLink(null)}
-                        >
-                          Back
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            navigator.clipboard.writeText(claimLink);
-                            setCopied(true);
-                          }}
-                        >
-                          <div>{copied ? "Copied" : "Copy"}</div>
-                          <div>
-                            {copied ? <Check size={16} /> : <Copy size={16} />}
-                          </div>
-                        </Button>
-                      </div>
-                    </>
+                      <Button
+                        onClick={() => approveMutation.mutate()}
+                        disabled={approveMutation.isPending}
+                      >
+                        {approveMutation.isPending ? "Approving..." : "Approve"}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setNeedsApproval(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   ) : (
                     <>
-                      <input
-                        type="number"
-                        placeholder="Amount"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="p-2 border rounded"
-                      />
-                      <div className="flex flex-row gap-2">
-                        <div>
-                          <Button
-                            onClick={handleCreateClaimLink}
-                            disabled={
-                              !amount || createClaimLinkMutation.isPending
-                            }
-                            variant="secondary"
-                            className="flex-shrink p-3"
-                          >
-                            <Link2 size={18} />
-                          </Button>
-                        </div>
-                        <div className="mt-2 text-gray-500">or</div>
-                        <div className="flex-grow">
+                      {claimLink ? (
+                        <>
+                          <div className="flex justify-center">
+                            <QRCodeSVG value={claimLink} size={200} />
+                          </div>
+                          <div className="text-sm text-gray-500 text-center">
+                            Share this claim link with the recipient
+                          </div>
+                          <div className="flex flex-row gap-2">
+                            <Button
+                              variant="secondary"
+                              onClick={() => setClaimLink(null)}
+                            >
+                              Back
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                navigator.clipboard.writeText(claimLink);
+                                setCopied(true);
+                              }}
+                            >
+                              <div>{copied ? "Copied" : "Copy"}</div>
+                              <div>
+                                {copied ? (
+                                  <Check size={16} />
+                                ) : (
+                                  <Copy size={16} />
+                                )}
+                              </div>
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
                           <input
-                            type="text"
-                            placeholder="Recipient address, username, or phone number"
-                            value={recipient}
-                            onChange={(e) => setRecipient(e.target.value)}
-                            className="p-2 border rounded w-full"
+                            type="number"
+                            placeholder="Amount"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="p-2 border rounded"
                           />
-                          {isEnsLoading && (
-                            <div className="text-sm text-gray-500">
-                              Resolving ENS...
+                          <div className="flex flex-row gap-2">
+                            <div>
+                              <Button
+                                onClick={handleCreateClaimLink}
+                                disabled={
+                                  !amount || createClaimLinkMutation.isPending
+                                }
+                                variant="secondary"
+                                className="flex-shrink p-3"
+                              >
+                                <Link2 size={18} />
+                              </Button>
+                            </div>
+                            <div className="mt-2 text-gray-500">or</div>
+                            <div className="flex-grow">
+                              <input
+                                type="text"
+                                placeholder="Recipient address, username, or phone number"
+                                value={recipient}
+                                onChange={(e) => setRecipient(e.target.value)}
+                                className="p-2 border rounded w-full"
+                              />
+                              {isEnsLoading && (
+                                <div className="text-sm text-gray-500">
+                                  Resolving ENS...
+                                </div>
+                              )}
+                              {resolvedAddress && (
+                                <div className="text-sm text-gray-500">
+                                  Sending to {truncateAddress(resolvedAddress)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-row gap-2">
+                            <Button
+                              onClick={() => setIsSendOpen(false)}
+                              variant="secondary"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleSend}
+                              disabled={
+                                !resolvedAddress ||
+                                !amount ||
+                                sendMutation.isPending
+                              }
+                            >
+                              {sendMutation.isPending ? "Sending..." : "Send"}
+                            </Button>
+                          </div>
+                          {sendMutation.isError && (
+                            <div className="text-red-500">
+                              Error: {sendMutation.error.message}
                             </div>
                           )}
-                          {resolvedAddress && (
-                            <div className="text-sm text-gray-500">
-                              Sending to {truncateAddress(resolvedAddress)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-row gap-2">
-                        <Button
-                          onClick={() => setIsSendOpen(false)}
-                          variant="secondary"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={handleSend}
-                          disabled={
-                            !resolvedAddress ||
-                            !amount ||
-                            sendMutation.isPending
-                          }
-                        >
-                          {sendMutation.isPending ? "Sending..." : "Send"}
-                        </Button>
-                      </div>
-                      {sendMutation.isError && (
-                        <div className="text-red-500">
-                          Error: {sendMutation.error.message}
-                        </div>
+                        </>
                       )}
                     </>
                   )}
                 </>
+              ) : (
+                <>
+                  <div className="flex justify-center">
+                    <Check size={60} className="text-green-500" />
+                  </div>
+                  <div className="text-center">
+                    Your transaction has been successfully sent.
+                  </div>
+                  {transactionHash && (
+                    <a
+                      href={`https://blockscan.com/tx/${transactionHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
+                    >
+                      View Transaction <ExternalLink size={16} />
+                    </a>
+                  )}
+                  <Button onClick={resetSendModal}>Close</Button>
+                </>
               )}
-            </>
-          ) : (
-            <>
-              <div className="flex justify-center">
-                <Check size={60} className="text-green-500" />
-              </div>
-              <div className="text-center">
-                Your transaction has been successfully sent.
-              </div>
-              {transactionHash && (
-                <a
-                  href={`https://blockscan.com/tx/${transactionHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 text-blue-500 hover:underline"
-                >
-                  View Transaction <ExternalLink size={16} />
-                </a>
-              )}
-              <Button onClick={resetSendModal}>Close</Button>
-            </>
-          )}
-        </div>
-      </BottomSheetModal>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
-      <BottomSheetModal isOpen={isReceiveOpen} setOpen={setReceiveOpen}>
-        <div className="flex flex-col gap-6">
-          <div className="text-2xl">Receive</div>
-          {!receiveLink ? (
-            <>
-              <input
-                type="number"
-                placeholder="Amount (optional)"
-                value={receiveAmount}
-                onChange={(e) => setReceiveAmount(e.target.value)}
-                className="p-2 border rounded"
-              />
-              <div className="flex flex-row gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => setReceiveOpen(false)}
-                >
-                  Close
-                </Button>
-                <Button onClick={handleReceive}>Next</Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex justify-center">
-                <QRCodeSVG value={receiveLink} size={200} />
-              </div>
-              <div className="text-sm text-gray-500 text-center">
-                Ask the sender to scan this QR code or share this link with them
-              </div>
-              <div className="flex flex-row gap-2">
-                <Button variant="secondary" onClick={handleBackReceive}>
-                  Back
-                </Button>
-                <Button onClick={handleCopyReceiveLink}>
-                  <div>{copied ? "Copied" : "Copy"}</div>
-                  <div>{copied ? <Check size={16} /> : <Copy size={16} />}</div>
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </BottomSheetModal>
+      <Drawer open={isReceiveOpen} onOpenChange={setReceiveOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Receive</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4">
+            <div className="flex flex-col gap-6">
+              {!receiveLink ? (
+                <>
+                  <input
+                    type="number"
+                    placeholder="Amount (optional)"
+                    value={receiveAmount}
+                    onChange={(e) => setReceiveAmount(e.target.value)}
+                    className="p-2 border rounded"
+                  />
+                  <div className="flex flex-row gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setReceiveOpen(false)}
+                    >
+                      Close
+                    </Button>
+                    <Button onClick={handleReceive}>Next</Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-center">
+                    <QRCodeSVG value={receiveLink} size={200} />
+                  </div>
+                  <div className="text-sm text-gray-500 text-center">
+                    Ask the sender to scan this QR code or share this link with
+                    them
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <Button variant="secondary" onClick={handleBackReceive}>
+                      Back
+                    </Button>
+                    <Button onClick={handleCopyReceiveLink}>
+                      <div>{copied ? "Copied" : "Copy"}</div>
+                      <div>
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                      </div>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

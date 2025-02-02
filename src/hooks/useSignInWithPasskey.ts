@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createUUID, serializeSignReturnType } from "@/lib/utils";
 import { useCallback, useState } from "react";
 import { CHALLENGE_DURATION_SECONDS } from "@/lib/constants";
+import { useSession } from "../providers/SessionProvider";
 
 interface UseSignInWithPasskeyProps {
   onSuccess?: (user: any) => void;
@@ -11,6 +12,7 @@ interface UseSignInWithPasskeyProps {
 
 export function useSignInWithPasskey({ onSuccess }: UseSignInWithPasskeyProps) {
   const [nonce] = useState(() => createUUID());
+  const { user, isLoading: isUserLoading } = useSession();
 
   const {
     data: challenge,
@@ -34,6 +36,7 @@ export function useSignInWithPasskey({ onSuccess }: UseSignInWithPasskeyProps) {
       return challenge;
     },
     refetchInterval: CHALLENGE_DURATION_SECONDS * 1000,
+    enabled: !user && !isUserLoading,
   });
 
   const signInMutation = useMutation({

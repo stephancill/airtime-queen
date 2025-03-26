@@ -27,10 +27,11 @@ export function createProxyRequestHandler(
       typeof targetUrl === "function" ? targetUrl(req) : targetUrl
     );
 
-    url.pathname = [
-      ...url.pathname.split("/").slice(1),
-      ...(context?.params?.path ?? []),
-    ].join("/");
+    if (typeof targetUrl !== "function")
+      url.pathname = [
+        ...url.pathname.split("/").slice(1),
+        ...(context?.params?.path ?? []),
+      ].join("/");
 
     url.search = req.nextUrl.search;
 

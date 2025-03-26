@@ -101,22 +101,19 @@ export const smartWalletConnector = ({
           chain,
           account,
           transport: bundlerTransports[chain.id],
-          paymaster: paymasterClient,
-          userOperation: {
-            async estimateFeesPerGas(parameters) {
-              const estimatedFees = await rpcClient.estimateFeesPerGas();
-              return {
-                ...estimatedFees,
-                maxFeePerGas: BigInt(
-                  Math.round(Number(estimatedFees.maxFeePerGas) * 1.5) // pimlico bundler needs a buffer
-                ),
-                maxPriorityFeePerGas: BigInt(
-                  Math.round(Number(estimatedFees.maxPriorityFeePerGas) * 1.5) // pimlico bundler needs a buffer
-                ),
-              };
-            },
-          },
         });
+
+        account.userOperation = {
+          estimateGas: async (userOperation) => {
+            const estimate = await bundlerClient.estimateUserOperationGas(
+              userOperation as any
+            );
+            // adjust preVerification upward
+            estimate.preVerificationGas =
+              estimate.preVerificationGas * BigInt(2);
+            return estimate;
+          },
+        };
 
         if (method === "eth_requestAccounts") {
           return [account.address];
@@ -156,6 +153,7 @@ export const smartWalletConnector = ({
                 //   : undefined) as undefined,
               },
             ],
+            paymaster: true,
           });
 
           const tx = await bundlerClient.waitForUserOperationReceipt({

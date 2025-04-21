@@ -113,7 +113,7 @@ export default function HomeView() {
             </Link>
           </div>
           <div className="mt-8">
-            <div className="flex justify-center mb-4 mx-4">
+            {/*<div className="flex justify-center mb-4 mx-4">
               <div className="inline-flex rounded-lg p-1 gap-1 border border-gray-200">
                 {ALL_TOKENS.map((token) => (
                   <button
@@ -129,7 +129,7 @@ export default function HomeView() {
                   </button>
                 ))}
               </div>
-            </div>
+            </div>*/}
             <div className="px-4">
               <WalletView token={baseToken} />
             </div>

@@ -1,4 +1,5 @@
 import { aaveL2PoolAbi } from "@/abi/aaveL2Pool";
+import { sponsoredVaultAbi } from "@/abi/sponsoredVault";
 import {
   Drawer,
   DrawerClose,
@@ -6,6 +7,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/providers/SessionProvider";
 import { Token, YieldToken } from "@/types/token";
 import { useMutation } from "@tanstack/react-query";
@@ -55,12 +57,6 @@ export function SavingsView({
         args: account.address ? [account.address] : undefined,
       },
       {
-        address: yieldToken.yieldPool,
-        abi: aaveL2PoolAbi,
-        functionName: "getReserveData",
-        args: [token.address],
-      },
-      {
         address: token.address,
         chainId: token.chainId,
         abi: erc20Abi,
@@ -79,16 +75,14 @@ export function SavingsView({
     ],
   });
 
-  const { yieldTokenBalance, reserveData, poolAllowance, tokenBalance } =
-    useMemo(() => {
-      if (!readContractsData) return {};
-      return {
-        yieldTokenBalance: readContractsData[0].result,
-        reserveData: readContractsData[1].result,
-        poolAllowance: readContractsData[2].result,
-        tokenBalance: readContractsData[3].result,
-      };
-    }, [readContractsData]);
+  const { yieldTokenBalance, poolAllowance, tokenBalance } = useMemo(() => {
+    if (!readContractsData) return {};
+    return {
+      yieldTokenBalance: readContractsData[0].result,
+      poolAllowance: readContractsData[1].result,
+      tokenBalance: readContractsData[2].result,
+    };
+  }, [readContractsData]);
 
   const depositMutation = useMutation({
     mutationFn: async () => {
@@ -98,9 +92,9 @@ export function SavingsView({
       const parsedAmount = parseUnits(depositAmount, token.decimals);
       const hash = await writeContractAsync({
         address: yieldToken.yieldPool,
-        abi: aaveL2PoolAbi,
-        functionName: "supply",
-        args: [token.address, parsedAmount, account.address, 0],
+        abi: sponsoredVaultAbi,
+        functionName: "deposit",
+        args: [parsedAmount],
       });
 
       return hash;
@@ -146,9 +140,9 @@ export function SavingsView({
       const parsedAmount = parseUnits(withdrawAmount, yieldToken.decimals);
       const hash = await writeContractAsync({
         address: yieldToken.yieldPool,
-        abi: aaveL2PoolAbi,
+        abi: sponsoredVaultAbi,
         functionName: "withdraw",
-        args: [token.address, parsedAmount, account.address],
+        args: [parsedAmount],
       });
 
       return hash;
@@ -185,18 +179,12 @@ export function SavingsView({
           <div className="text-[60px] font-bold">
             {formatTokenAmount(yieldTokenBalance, yieldToken)}
           </div>
-        ) : isLoadingBalances ? null : (
+        ) : isLoadingBalances ? (
+          <Skeleton className="h-[60px] w-[200px]" />
+        ) : (
           <div>Error: {errorBalances?.message}</div>
         )}
-        {reserveData && (
-          <div className="pb-4">
-            earning{" "}
-            {parseFloat(
-              formatUnits(reserveData.currentLiquidityRate, 25)
-            ).toFixed(2)}
-            %
-          </div>
-        )}
+        <div className="pb-4">earning rewards</div>
       </div>
       <div className="flex flex-row gap-2">
         <Button variant="secondary" onClick={() => setIsDepositOpen(true)}>

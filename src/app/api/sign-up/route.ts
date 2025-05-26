@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
-import { createPublicClient, Hex, http } from "viem";
+import { createPublicClient, getAddress, Hex, http } from "viem";
 import {
   toCoinbaseSmartAccount,
   toWebAuthnAccount,
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
       phoneNumber: parsedPhoneNumber.number,
       passkeyId,
       passkeyPublicKey,
-      walletAddress: account.address,
+      walletAddress: getAddress(account.address),
     })
     .returningAll()
     .executeTakeFirst();

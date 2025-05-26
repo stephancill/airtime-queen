@@ -4,6 +4,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LINKDROP_ESCROW_ADDRESS } from "@/lib/addresses";
 import { formatTokenAmount, truncateAddress } from "@/lib/utils";
 import { Token } from "@/types/token";
@@ -331,7 +332,9 @@ export function WalletView({ token }: { token: Token }) {
           <div className="text-[60px] font-bold">
             {formatTokenAmount(tokenBalance, token)}
           </div>
-        ) : isLoadingBalances ? null : (
+        ) : isLoadingBalances ? (
+          <Skeleton className="h-[60px] w-[200px]" />
+        ) : (
           <div>Error: {errorBalances?.message}</div>
         )}
         <button

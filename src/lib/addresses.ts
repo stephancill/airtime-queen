@@ -28,13 +28,20 @@ export const ZARP_TOKEN: Token = {
 // This is a dummy yield token with 0% yield
 export const ZARP_YIELD_TOKEN: YieldToken = {
   symbol: "aBasZARP",
-  address: "0x381Bb761187411F920aF8350CA9D3D003E5AB4E2",
+  address: "0xf5a7bb26376093a5e44168abed2eb581366b2cce",
   chainId: 8453,
   decimals: 18,
-  yieldPool: "0x381Bb761187411F920aF8350CA9D3D003E5AB4E2",
+  yieldPool: "0xf5a7bb26376093a5e44168abed2eb581366b2cce",
 } as const;
 
 export const ALL_TOKENS = [USDC_TOKEN, ZARP_TOKEN];
+
+export const KNOWN_ADDRESSES: Record<string, string> = {
+  [ZARP_TOKEN.address.toLowerCase()]: "ZAR",
+  [ZARP_YIELD_TOKEN.address.toLowerCase()]: "Savings",
+  [LINKDROP_ESCROW_ADDRESS.toLowerCase()]: "Linkdrop Escrow",
+  // TODO: Merchant address for Sale type
+};
 
 export const tokenByCountryCode: Record<string, Token> = {
   ZA: ZARP_TOKEN,
@@ -42,7 +49,6 @@ export const tokenByCountryCode: Record<string, Token> = {
 } as const;
 
 export const yieldTokenByBaseToken: Record<string, YieldToken> = {
-  [USDC_TOKEN.address]: USDC_YIELD_TOKEN,
   [ZARP_TOKEN.address]: ZARP_YIELD_TOKEN,
 };
 
@@ -52,4 +58,8 @@ export function getBaseToken(countryCode: string) {
 
 export function getYieldToken(token: Token): YieldToken | undefined {
   return yieldTokenByBaseToken[token.address];
+}
+
+export function getKnownAddressLabel(address: string): string | null {
+  return KNOWN_ADDRESSES[address.toLowerCase()] || null;
 }

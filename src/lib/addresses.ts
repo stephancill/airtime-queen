@@ -1,4 +1,4 @@
-import { Token, YieldToken } from "../types/token";
+import type { Token, YieldToken } from "../types/token";
 
 export const LINKDROP_ESCROW_ADDRESS =
   "0x139B79602B68E8198EA3D57f5E6311fd98262269" as const;
@@ -60,6 +60,7 @@ export function getYieldToken(token: Token): YieldToken | undefined {
   return yieldTokenByBaseToken[token.address];
 }
 
-export function getKnownAddressLabel(address: string): string | null {
+export function getKnownAddressLabel(address: string | null | undefined): string | null {
+  if (!address) return null;
   return KNOWN_ADDRESSES[address.toLowerCase()] || null;
 }

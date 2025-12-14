@@ -2,7 +2,8 @@ import { withAuth } from "@/lib/auth";
 import { ZARP_TOKEN, ZARP_YIELD_TOKEN } from "@/lib/addresses";
 import { getKnownAddressLabel } from "@/lib/addresses";
 import { db } from "@/lib/db";
-import { Address, getAddress } from "viem";
+import { getAddress } from "viem";
+import type { Address } from "viem";
 
 interface TransactionResponse {
   items: Array<{
@@ -21,7 +22,7 @@ interface TransactionResponse {
       public_tags?: Array<{ label: string }>;
     };
     token: {
-      address: string;
+      address_hash: string;
       name: string;
       decimals: string;
     };
@@ -43,7 +44,6 @@ export const GET = withAuth(async (req, user) => {
 
   const pageParams = new URLSearchParams({
     type: "ERC-20",
-    filter: "to | from",
     token: ZARP_TOKEN.address,
   });
 
@@ -101,7 +101,7 @@ export const GET = withAuth(async (req, user) => {
       getKnownAddressLabel(item.from.hash) ||
       userLabelsMap[getAddress(item.from.hash)];
     const tokenLabel =
-      getKnownAddressLabel(item.token.address) || item.token.name;
+      getKnownAddressLabel(item.token.address_hash) || item.token.name;
 
     // Determine Cash label precedence
     const toIsCash = item.to.hash.toLowerCase() === walletAddress.toLowerCase();
@@ -141,7 +141,7 @@ export const GET = withAuth(async (req, user) => {
         null,
       typeLabel,
       color,
-      tokenAddress: item.token.address,
+      tokenAddress: item.token.address_hash,
       tokenLabel,
       timestamp: item.timestamp,
       amount: amount.toLocaleString(undefined, {
@@ -155,9 +155,9 @@ export const GET = withAuth(async (req, user) => {
     items: transformedItems,
     nextPageParams: data.next_page_params
       ? {
-          blockNumber: data.next_page_params?.block_number,
-          index: data.next_page_params?.index,
-        }
+        blockNumber: data.next_page_params?.block_number,
+        index: data.next_page_params?.index,
+      }
       : undefined,
   });
 });

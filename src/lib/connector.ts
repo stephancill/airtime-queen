@@ -111,6 +111,14 @@ export const smartWalletConnector = ({
             // adjust preVerification upward
             estimate.preVerificationGas =
               estimate.preVerificationGas * BigInt(2);
+            // WebAuthn owners require a minimum verification gas limit (see
+            // viem's toCoinbaseSmartAccount) since the P256 signature
+            // verification in validateUserOp is expensive. The bundler's raw
+            // estimate is computed with stub signatures and under-reports it,
+            // causing AA40 over verificationGasLimit at send time.
+            estimate.verificationGasLimit = BigInt(
+              Math.max(Number(estimate.verificationGasLimit ?? 0), 800_000)
+            );
             return estimate;
           },
         };
